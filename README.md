@@ -19,9 +19,9 @@ A fully autonomous AI agent + human-in-the-loop review system that browses Pinte
         ↓
 ┌──────────────────────────────────────────────┐
 │  PHASE 1 — Agent Scoring (automated)         │
-│  Scrapling → Pinterest → Scroll → Score      │
-│  Guardrails: pin cap, scroll cap, timeout,   │
-│  error circuit breaker, stale detector        │
+│  Scrapling → Pinterest → Extract → Score     │
+│  Guardrails: pin cap, timeout,               │
+│  error circuit breaker                        │
 │  UI shows real-time progress                 │
 └──────────────────────────────────────────────┘
         ↓
@@ -70,12 +70,10 @@ Then open http://localhost:8000 — type a product keyword and the agent will ha
 | Guardrail | Default | What it prevents |
 |---|---|---|
 | `max_pins` | 40 | Collecting more pins than needed |
-| `max_scrolls` | 8 | Infinite scroll on a bottomless feed |
 | `session_timeout_s` | 180s | Runaway session from a slow network |
 | `max_error_streak` | 5 | Looping when Pinterest layout changes |
-| `max_stale_scrolls` | 2 | Scrolling past the end of the feed |
 
-All five are evaluated on every iteration via a single `guard.should_stop` check. Configurable from the search panel UI.
+All three are evaluated via a single `guard.should_stop` check. Configurable from the search panel UI.
 
 ## Project Structure
 

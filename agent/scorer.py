@@ -53,41 +53,25 @@ async def run_scoring_phase(
     keyword: str,
     category: str,
     max_pins: int = 40,
-    max_scrolls: int = 8,
     session_timeout_s: int = 180,
 ) -> list[dict]:
     """Use Scrapling to browse Pinterest, extract pin data, and score thumbnails."""
 
     guard = BrowsingGuardrail(
         max_pins=max_pins,
-        max_scrolls=max_scrolls,
         session_timeout_s=session_timeout_s,
         max_error_streak=5,
-        max_stale_scrolls=2,
     )
 
     collected_pins: list[dict] = []
 
-    async def scroll_and_collect(page):
-        """Scroll Pinterest feed and extract pin data via page_action."""
+    async def extract_pins(page):
+        """Extract pin data from the rendered Pinterest page."""
         await page.wait_for_timeout(3000)
 
-        while not guard.should_stop:
-            pin_cards = await page.query_selector_all('[data-test-id="pin"]')
-            guard.record_scroll(len(pin_cards))
-
-            print(
-                f"  [scroll {guard._scroll_count}] "
-                f"{len(pin_cards)} pins visible  |  {guard.status_line()}"
-            )
-
-            if guard.should_stop:
-                break
-
-            await page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
-            await page.wait_for_timeout(1500)
-
         pin_cards = await page.query_selector_all('[data-test-id="pin"]')
+        print(f"  Found {len(pin_cards)} pin cards on page")
+
         for card in pin_cards[:max_pins]:
             try:
                 img_el = await card.query_selector("img")
@@ -120,7 +104,7 @@ async def run_scoring_phase(
         search_url,
         headless=True,
         network_idle=True,
-        page_action=scroll_and_collect,
+        page_action=extract_pins,
         timeout=session_timeout_s * 1000,
     )
 

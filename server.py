@@ -49,7 +49,6 @@ class SearchRequest(BaseModel):
     keyword: str
     category: str = ""
     max_pins: int = 40
-    max_scrolls: int = 8
     session_timeout_s: int = 180
 
 
@@ -78,7 +77,6 @@ async def _run_search(req: SearchRequest) -> None:
             keyword=req.keyword,
             category=req.category or req.keyword,
             max_pins=req.max_pins,
-            max_scrolls=req.max_scrolls,
             session_timeout_s=req.session_timeout_s,
         )
         _search_state["status"] = "done"
