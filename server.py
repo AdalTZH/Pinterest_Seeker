@@ -139,9 +139,13 @@ async def get_results():
         return json.load(f)
 
 
-@app.post("/api/generate")
-async def generate(req: GenerateRequest):
-    """Fetch full-res images for selected pins and generate posters."""
+class GenerateOneRequest(BaseModel):
+    pin_id: int
+
+
+@app.post("/api/generate-one")
+async def generate_one(req: GenerateOneRequest):
+    """Generate a poster for a single pin. Called concurrently by the frontend."""
     if not DATA_FILE.exists():
         return JSONResponse(
             content={"error": "No scored results found"}, status_code=404
@@ -150,41 +154,35 @@ async def generate(req: GenerateRequest):
     with open(DATA_FILE) as f:
         all_results = json.load(f)
 
-    selected = [r for r in all_results if r["id"] in req.selected_ids]
-    if not selected:
+    item = next((r for r in all_results if r["id"] == req.pin_id), None)
+    if not item:
         return JSONResponse(
-            content={"error": "No matching pins found"}, status_code=400
+            content={"error": "Pin not found"}, status_code=404
         )
 
-    generated: list[dict] = []
+    try:
+        full_res = await fetch_full_res_url(item["pin_url"])
+        item["full_res_url"] = full_res
 
-    for item in selected:
-        try:
-            full_res = await fetch_full_res_url(item["pin_url"])
-            item["full_res_url"] = full_res
+        poster_filename = f"poster_{item['id']}.png"
+        poster_path = await generate_poster(
+            image_url=full_res,
+            output_filename=poster_filename,
+        )
+        item["poster_path"] = poster_path
 
-            poster_filename = f"poster_{item['id']}.png"
-            poster_path = await generate_poster(
-                image_url=full_res,
-                output_filename=poster_filename,
-            )
-            item["poster_path"] = poster_path
-            generated.append(
-                {
-                    "id": item["id"],
-                    "full_res_url": full_res,
-                    "poster_path": poster_path,
-                }
-            )
-        except Exception as e:
-            import traceback
-            traceback.print_exc()
-            generated.append(
-                {"id": item["id"], "error": str(e)}
-            )
+        # Persist updated result
+        with open(DATA_FILE, "w") as f:
+            json.dump(all_results, f, indent=2)
 
-    # Persist updated results
-    with open(DATA_FILE, "w") as f:
-        json.dump(all_results, f, indent=2)
-
-    return {"generated": generated}
+        return {
+            "id": item["id"],
+            "full_res_url": full_res,
+            "poster_path": poster_path,
+        }
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return JSONResponse(
+            content={"id": req.pin_id, "error": str(e)}, status_code=500
+        )
