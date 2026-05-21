@@ -1170,7 +1170,7 @@ async function generateOnePoster(item) {
             card.classList.add("error");
             card.innerHTML = `
                 <div class="poster-error">
-                    <p>${t("poster_error_prefix")}: ${data.error || "Unknown error"}</p>
+                    <p>${t("poster_error_prefix")}: ${data.error || data.detail || "Unknown error"}</p>
                 </div>
                 <div style="padding:12px 16px;border-top:1px solid var(--hairline);display:flex;align-items:center;gap:12px;">
                     <img src="${item.thumbnail_url}" style="width:48px;height:48px;border-radius:8px;object-fit:cover;">

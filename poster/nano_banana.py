@@ -101,12 +101,32 @@ async def _generate_image(
     response.raise_for_status()
     data = response.json()
 
+    if "choices" not in data:
+        print(f"[ImageGen] Unexpected response keys: {list(data.keys())}")
+        if "error" in data:
+            raise RuntimeError(f"API error: {data['error']}")
+        raise RuntimeError(f"No 'choices' in response: {list(data.keys())}")
+
     message = data["choices"][0]["message"]
+
+    # Handle OpenAI-style image content blocks
+    content = message.get("content")
+    if isinstance(content, list):
+        for block in content:
+            if isinstance(block, dict) and block.get("type") == "image_url":
+                img_url = block.get("image_url", {}).get("url", "")
+                if img_url.startswith("data:"):
+                    _, b64_data = img_url.split(",", 1)
+                    return base64.b64decode(b64_data)
+
+    # Fallback: check 'images' field
     images = message.get("images", [])
     if images:
         data_url = images[0]["image_url"]["url"]
         _, b64_data = data_url.split(",", 1)
         return base64.b64decode(b64_data)
+
+    print(f"[ImageGen] No image found in message keys: {list(message.keys())}")
     return None
 
 
