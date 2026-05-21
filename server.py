@@ -72,12 +72,16 @@ async def _run_search(req: SearchRequest) -> None:
     _search_state["progress"] = "Starting Pinterest search..."
     _search_state["error"] = None
 
+    def _update_progress(msg: str) -> None:
+        _search_state["progress"] = msg
+
     try:
         results = await run_scoring_phase(
             keyword=req.keyword,
             category=req.category or req.keyword,
             max_pins=req.max_pins,
             session_timeout_s=req.session_timeout_s,
+            progress_callback=_update_progress,
         )
         _search_state["status"] = "done"
         _search_state["progress"] = f"Scored {len(results)} pins"

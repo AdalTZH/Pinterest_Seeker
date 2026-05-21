@@ -95,6 +95,30 @@
             color: #555;
             font-size: 0.95rem;
         }
+        .progress-bar-container {
+            display: none;
+            max-width: 400px;
+            margin: 12px auto 0;
+            height: 8px;
+            background: #eee;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .progress-bar-container.active { display: block; }
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: #e60023;
+            border-radius: 4px;
+            transition: width 0.4s ease;
+        }
+        .progress-detail {
+            display: none;
+            color: #999;
+            font-size: 0.8rem;
+            margin-top: 6px;
+        }
+        .progress-detail.active { display: block; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
         /* ── Config panel (shown after results) ───────────────── */
@@ -269,6 +293,10 @@
     <div class="progress-panel" id="progressPanel">
         <div class="spinner"></div>
         <p class="progress-text" id="progressText">Starting search...</p>
+        <div class="progress-bar-container" id="progressBarContainer">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+        <p class="progress-detail" id="progressDetail"></p>
     </div>
 
     <!-- ── STEP 3: Results ─────────────────────────────────── -->
@@ -304,7 +332,10 @@
         // ── DOM refs ──────────────────────────────────────────
         const searchPanel   = document.getElementById("searchPanel");
         const progressPanel = document.getElementById("progressPanel");
-        const progressText  = document.getElementById("progressText");
+        const progressText      = document.getElementById("progressText");
+        const progressBar       = document.getElementById("progressBar");
+        const progressBarCtr    = document.getElementById("progressBarContainer");
+        const progressDetail    = document.getElementById("progressDetail");
         const configPanel   = document.getElementById("configPanel");
         const actionsBar    = document.getElementById("actionsBar");
         const grid          = document.getElementById("grid");
@@ -415,8 +446,50 @@
             try {
                 const res = await fetch("/api/search/status");
                 const data = await res.json();
+                const msg = data.progress || "Working...";
 
-                progressText.textContent = data.progress || "Working...";
+                // Parse scoring progress for bar updates
+                const scoringMatch = msg.match(/Scoring pin (\d+) of (\d+)/);
+                const scoredMatch = msg.match(/Scored pin (\d+) of (\d+): (\d+)\/10/);
+
+                if (scoredMatch) {
+                    const current = parseInt(scoredMatch[1]);
+                    const total = parseInt(scoredMatch[2]);
+                    const pct = Math.round((current / total) * 100);
+                    progressText.textContent = `Scoring images with AI... (${current}/${total})`;
+                    progressBar.style.width = pct + "%";
+                    progressBarCtr.className = "progress-bar-container active";
+                    progressDetail.textContent = `Pin ${current}: ${scoredMatch[3]}/10`;
+                    progressDetail.className = "progress-detail active";
+                } else if (scoringMatch) {
+                    const current = parseInt(scoringMatch[1]);
+                    const total = parseInt(scoringMatch[2]);
+                    const pct = Math.max(Math.round(((current - 1) / total) * 100), 2);
+                    progressText.textContent = `Scoring images with AI... (${current - 1}/${total})`;
+                    progressBar.style.width = pct + "%";
+                    progressBarCtr.className = "progress-bar-container active";
+                    progressDetail.textContent = `Analyzing pin ${current}...`;
+                    progressDetail.className = "progress-detail active";
+                } else if (msg.includes("Connecting")) {
+                    progressText.textContent = "Connecting to Pinterest...";
+                    progressBarCtr.className = "progress-bar-container";
+                    progressDetail.className = "progress-detail";
+                } else if (msg.includes("extracting")) {
+                    progressText.textContent = "Loading Pinterest results...";
+                    progressBarCtr.className = "progress-bar-container";
+                    progressDetail.className = "progress-detail";
+                } else if (msg.includes("Found")) {
+                    progressText.textContent = msg;
+                    progressBarCtr.className = "progress-bar-container";
+                    progressDetail.className = "progress-detail";
+                } else if (msg.includes("Extracted")) {
+                    progressText.textContent = msg;
+                    progressBarCtr.className = "progress-bar-container active";
+                    progressBar.style.width = "2%";
+                    progressDetail.className = "progress-detail";
+                } else {
+                    progressText.textContent = msg;
+                }
 
                 if (data.status === "done") {
                     clearInterval(pollTimer);

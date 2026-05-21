@@ -54,8 +54,14 @@ async def run_scoring_phase(
     category: str,
     max_pins: int = 40,
     session_timeout_s: int = 180,
+    progress_callback: callable | None = None,
 ) -> list[dict]:
     """Use Scrapling to browse Pinterest, extract pin data, and score thumbnails."""
+
+    def _report(msg: str) -> None:
+        print(f"  {msg}")
+        if progress_callback:
+            progress_callback(msg)
 
     guard = BrowsingGuardrail(
         max_pins=max_pins,
@@ -67,10 +73,11 @@ async def run_scoring_phase(
 
     async def extract_pins(page):
         """Extract pin data from the rendered Pinterest page."""
+        _report("Page loaded — extracting pins...")
         await page.wait_for_timeout(3000)
 
         pin_cards = await page.query_selector_all('[data-test-id="pin"]')
-        print(f"  Found {len(pin_cards)} pin cards on page")
+        _report(f"Found {len(pin_cards)} pin cards on page")
 
         for card in pin_cards[:max_pins]:
             try:
@@ -99,7 +106,7 @@ async def run_scoring_phase(
         f"?q={keyword.replace(' ', '+')}"
     )
 
-    print(f"  Fetching {search_url} with Scrapling StealthyFetcher...")
+    _report("Connecting to Pinterest...")
     await StealthyFetcher.async_fetch(
         search_url,
         headless=True,
@@ -108,15 +115,18 @@ async def run_scoring_phase(
         timeout=session_timeout_s * 1000,
     )
 
-    print(f"\n  Extracted {len(collected_pins)} pins. Scoring with {MODEL}...\n")
+    total_to_score = min(len(collected_pins), max_pins)
+    _report(f"Extracted {len(collected_pins)} pins — scoring {total_to_score} with AI...")
 
     results: list[dict] = []
 
     async with httpx.AsyncClient() as http:
         for i, pin in enumerate(collected_pins):
             if guard.should_stop:
-                print(f"\n  Stopped: {guard.stop_reason}")
+                _report(f"Stopped: {guard.stop_reason}")
                 break
+
+            _report(f"Scoring pin {i + 1} of {total_to_score}...")
 
             try:
                 img_resp = await http.get(pin["thumbnail_url"])
@@ -138,23 +148,21 @@ async def run_scoring_phase(
                 )
 
                 guard.record_pin_collected()
-                print(
-                    f"  [{guard._pins_collected}/{max_pins}] "
-                    f"Score {score_result['score']}/10 — "
-                    f"{score_result['reason']}"
+                _report(
+                    f"Scored pin {i + 1} of {total_to_score}: "
+                    f"{score_result['score']}/10"
                 )
                 await asyncio.sleep(0.3)
 
             except Exception as e:
                 guard.record_error()
-                print(
-                    f"  [{i + 1}] Error: {e}  "
+                _report(
+                    f"Error on pin {i + 1}: {e} "
                     f"(streak={guard._error_streak})"
                 )
                 continue
 
-    print(f"\n  Finished — {guard.stop_reason or 'all pins scored'}")
-    print(f"   {guard.status_line()}")
+    _report(f"Done — scored {len(results)} pins")
 
     os.makedirs("data", exist_ok=True)
     with open("data/scored_results.json", "w") as f:
