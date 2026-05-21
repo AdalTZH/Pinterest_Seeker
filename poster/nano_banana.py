@@ -36,6 +36,14 @@ async def generate_poster(
     )
 
     async with httpx.AsyncClient(timeout=120) as http:
+        # Download the image ourselves — Pinterest blocks direct fetches
+        # from third-party servers (returns 403).
+        img_resp = await http.get(image_url)
+        img_resp.raise_for_status()
+        b64_img = base64.b64encode(img_resp.content).decode()
+        content_type = img_resp.headers.get("content-type", "image/jpeg")
+        data_uri = f"data:{content_type};base64,{b64_img}"
+
         response = await http.post(
             "https://openrouter.ai/api/v1/chat/completions",
             headers={
@@ -50,7 +58,7 @@ async def generate_poster(
                         "content": [
                             {
                                 "type": "image_url",
-                                "image_url": {"url": image_url},
+                                "image_url": {"url": data_uri},
                             },
                             {"type": "text", "text": prompt},
                         ],
