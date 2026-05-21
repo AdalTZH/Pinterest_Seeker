@@ -2,8 +2,8 @@
 
 Step 1: GPT-5.4-mini (Image Prompt Engineer) analyzes the product image
         and crafts a detailed image generation prompt.
-Step 2: Gemini 3.1 Flash (image generation) receives the crafted prompt
-        along with the original image and generates the poster.
+Step 2: GPT-5.4 Image 2 receives the crafted prompt along with the
+        original image and generates the poster.
 """
 
 from __future__ import annotations
@@ -19,7 +19,7 @@ from agent.prompts import IMAGE_PROMPT_ENGINEER_SYSTEM, IMAGE_PROMPT_ENGINEER_US
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "")
 PROMPT_MODEL = os.getenv("PROMPT_MODEL", "openai/gpt-5.4-mini")
 IMAGE_GEN_MODEL = os.getenv(
-    "IMAGE_GEN_MODEL", "google/gemini-3.1-flash-image-preview"
+    "IMAGE_GEN_MODEL", "openai/gpt-5.4-image-2"
 )
 OUTPUT_DIR = Path("output/posters")
 
@@ -74,7 +74,7 @@ async def _generate_image(
     prompt: str,
     data_uri: str,
 ) -> bytes | None:
-    """Step 2: Send the crafted prompt + original image to Gemini for poster generation."""
+    """Step 2: Send the crafted prompt + original image to GPT-5.4 Image 2 for poster generation."""
     response = await http.post(
         "https://openrouter.ai/api/v1/chat/completions",
         headers={
