@@ -31,6 +31,33 @@ DATA_FILE = Path("data/scored_results.json")
 app.mount("/output", StaticFiles(directory="output"), name="output")
 
 
+# ── Warmup StealthyFetcher on startup ────────────────────────────────
+
+async def _warmup_task():
+    """Pre-launch camoufox so the first search doesn't wait 30-90s."""
+    from scrapling.fetchers import StealthyFetcher
+
+    async def _noop(page):
+        pass
+
+    try:
+        print("[warmup] Pre-launching stealth browser...")
+        await StealthyFetcher.async_fetch(
+            "https://www.google.com",
+            headless=True,
+            page_action=_noop,
+            timeout=60_000,
+        )
+        print("[warmup] Stealth browser ready.")
+    except Exception as e:
+        print(f"[warmup] Browser warmup failed (non-fatal): {e}")
+
+
+@app.on_event("startup")
+async def _schedule_warmup():
+    asyncio.create_task(_warmup_task())
+
+
 # ── In-memory search state ───────────────────────────────────────────
 
 _search_state: dict = {
