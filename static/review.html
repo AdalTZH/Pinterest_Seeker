@@ -6,129 +6,171 @@
     <title>Pinterest Poster Agent</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #faf8f5;
-            --card-bg: #ffffff;
-            --panel-bg: #ffffff;
-            --text: #2c2c2c;
-            --text-secondary: #6b6b6b;
-            --text-muted: #9a9a9a;
-            --accent: #b8860b;
-            --accent-hover: #9a7209;
-            --accent-light: #f5f0e3;
-            --border: #e8e4df;
-            --border-light: #f0ece7;
-            --badge-high: #2d6a4f;
-            --badge-mid: #bc6c25;
-            --badge-low: #c1121f;
-            --shadow-sm: 0 1px 3px rgba(0,0,0,0.04);
-            --shadow: 0 2px 12px rgba(0,0,0,0.06);
-            --shadow-lg: 0 8px 30px rgba(0,0,0,0.08);
-            --radius: 14px;
-            --radius-sm: 10px;
-            --font-heading: 'Playfair Display', Georgia, serif;
-            --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            /* ── Brand & Accent ─────────────────────────── */
+            --primary: #0066cc;
+            --primary-focus: #0071e3;
+            --primary-on-dark: #2997ff;
+
+            /* ── Surface ────────────────────────────────── */
+            --canvas: #ffffff;
+            --canvas-parchment: #f5f5f7;
+            --surface-pearl: #fafafc;
+            --surface-tile-dark: #1d1d1f;
+
+            /* ── Text ───────────────────────────────────── */
+            --ink: #1d1d1f;
+            --ink-muted-80: #333333;
+            --ink-muted-48: #7a7a7a;
+            --body-muted: #86868b;
+
+            /* ── Hairlines ──────────────────────────────── */
+            --divider-soft: rgba(0, 0, 0, 0.04);
+            --hairline: #d2d2d7;
+
+            /* ── Score badges ───────────────────────────── */
+            --badge-high: #34c759;
+            --badge-mid: #ff9f0a;
+            --badge-low: #ff3b30;
+
+            /* ── Radius ─────────────────────────────────── */
+            --rounded-sm: 8px;
+            --rounded-md: 12px;
+            --rounded-lg: 18px;
+            --rounded-pill: 9999px;
+
+            /* ── Elevation ──────────────────────────────── */
+            --product-shadow: 0 3px 5px rgba(0, 0, 0, 0.04), 0 8px 30px rgba(0, 0, 0, 0.08);
+
+            /* ── Typography ─────────────────────────────── */
+            --font: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
-            font-family: var(--font-body);
-            background: var(--bg);
-            color: var(--text);
+            font-family: var(--font);
+            background: var(--canvas);
+            color: var(--ink);
             min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
 
-        /* ── Header ──────────────────────────────────────────── */
-        .header {
-            max-width: 900px;
+        /* ── Sub-nav / header bar ────────────────────────────────── */
+        .sub-nav {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(245, 245, 247, 0.8);
+            backdrop-filter: saturate(180%) blur(20px);
+            -webkit-backdrop-filter: saturate(180%) blur(20px);
+            border-bottom: 1px solid var(--divider-soft);
+            height: 52px;
+        }
+        .sub-nav-inner {
+            max-width: 980px;
             margin: 0 auto;
-            padding: 40px 24px 0;
+            padding: 0 24px;
+            height: 100%;
             display: flex;
+            align-items: center;
             justify-content: space-between;
-            align-items: flex-start;
         }
-        .header-left h1 {
-            font-family: var(--font-heading);
-            font-size: 2rem;
-            font-weight: 700;
-            color: var(--text);
-            letter-spacing: -0.02em;
+        .sub-nav-title {
+            font-size: 21px;
+            font-weight: 600;
+            letter-spacing: 0.011em;
+            color: var(--ink);
         }
-        .header-left p {
-            color: var(--text-secondary);
-            font-size: 0.9rem;
-            margin-top: 6px;
-            font-weight: 300;
+        .sub-nav-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
         .lang-toggle {
             display: flex;
-            background: var(--border-light);
-            border-radius: 8px;
+            border-radius: var(--rounded-pill);
             overflow: hidden;
-            border: 1px solid var(--border);
-            flex-shrink: 0;
-            margin-top: 4px;
+            border: 1px solid var(--hairline);
         }
         .lang-toggle button {
-            padding: 6px 14px;
-            font-size: 0.78rem;
-            font-weight: 500;
+            padding: 5px 14px;
+            font-size: 12px;
+            font-weight: 400;
+            letter-spacing: -0.12px;
             border: none;
             background: transparent;
             cursor: pointer;
-            color: var(--text-muted);
+            color: var(--ink-muted-48);
             transition: all 0.2s;
-            font-family: var(--font-body);
+            font-family: var(--font);
         }
         .lang-toggle button.active {
-            background: var(--card-bg);
-            color: var(--text);
-            box-shadow: var(--shadow-sm);
+            background: var(--canvas);
+            color: var(--ink);
         }
 
-        /* ── Panels ──────────────────────────────────────────── */
-        .panel {
-            max-width: 560px;
-            margin: 32px auto;
-            background: var(--panel-bg);
-            border-radius: var(--radius);
-            padding: 32px;
-            border: 1px solid var(--border-light);
-            box-shadow: var(--shadow);
+        /* ── Hero section ────────────────────────────────────────── */
+        .hero {
+            text-align: center;
+            padding: 80px 24px 48px;
+            background: var(--canvas);
         }
-        .panel.wide {
-            max-width: 900px;
+        .hero h1 {
+            font-size: 56px;
+            font-weight: 600;
+            line-height: 1.07;
+            letter-spacing: -0.28px;
+            color: var(--ink);
+        }
+        .hero p {
+            font-size: 21px;
+            font-weight: 400;
+            line-height: 1.19;
+            letter-spacing: 0.011em;
+            color: var(--body-muted);
+            margin-top: 8px;
+        }
+
+        /* ── Panels ──────────────────────────────────────────────── */
+        .panel {
+            max-width: 580px;
+            margin: 0 auto 48px;
+            padding: 32px;
         }
 
         .panel label {
             display: block;
-            font-size: 0.8rem;
-            font-weight: 500;
-            color: var(--text-secondary);
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--body-muted);
             margin-bottom: 6px;
             text-transform: uppercase;
-            letter-spacing: 0.04em;
+            letter-spacing: 0.02em;
         }
         .panel input[type="text"],
         .panel input[type="number"] {
             width: 100%;
             padding: 12px 16px;
-            border: 1px solid var(--border);
-            border-radius: var(--radius-sm);
-            font-size: 0.95rem;
-            font-family: var(--font-body);
-            color: var(--text);
-            background: var(--bg);
-            margin-bottom: 16px;
+            border: 1px solid var(--hairline);
+            border-radius: var(--rounded-pill);
+            font-size: 17px;
+            font-weight: 400;
+            line-height: 1.47;
+            letter-spacing: -0.374px;
+            font-family: var(--font);
+            color: var(--ink);
+            background: var(--canvas);
+            margin-bottom: 20px;
             transition: border-color 0.2s, box-shadow 0.2s;
         }
         .panel input:focus {
             outline: none;
-            border-color: var(--accent);
-            box-shadow: 0 0 0 3px rgba(184,134,11,0.1);
+            border-color: var(--primary-focus);
+            box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.15);
         }
         .field-row {
             display: grid;
@@ -136,70 +178,101 @@
             gap: 16px;
         }
 
-        /* ── Buttons ─────────────────────────────────────────── */
+        /* ── Buttons ─────────────────────────────────────────────── */
         .btn {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            padding: 12px 28px;
-            font-size: 0.9rem;
-            font-weight: 600;
-            font-family: var(--font-body);
+            font-family: var(--font);
             border: none;
-            border-radius: var(--radius-sm);
             cursor: pointer;
             transition: all 0.2s ease;
-            gap: 8px;
         }
-        .btn:active { transform: scale(0.97); }
+        .btn:active { transform: scale(0.95); }
+
         .btn-primary {
-            background: var(--accent);
+            background: var(--primary);
             color: #fff;
+            font-size: 17px;
+            font-weight: 400;
+            line-height: 1.0;
+            padding: 11px 22px;
+            border-radius: var(--rounded-pill);
             width: 100%;
         }
-        .btn-primary:hover { background: var(--accent-hover); }
+        .btn-primary:hover { background: var(--primary-focus); }
         .btn-primary:disabled {
-            background: var(--border);
-            color: var(--text-muted);
+            background: var(--hairline);
+            color: var(--ink-muted-48);
             cursor: not-allowed;
+            transform: none;
         }
+
         .btn-secondary {
-            background: var(--bg);
-            color: var(--text);
-            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--primary);
+            font-size: 17px;
+            font-weight: 400;
+            padding: 11px 22px;
+            border-radius: var(--rounded-pill);
+            border: 1px solid var(--primary);
         }
-        .btn-secondary:hover { background: var(--border-light); }
+        .btn-secondary:hover {
+            background: var(--primary);
+            color: #fff;
+        }
+
         .btn-ghost {
             background: transparent;
-            color: var(--text-secondary);
+            color: var(--primary);
+            font-size: 14px;
+            font-weight: 400;
+            letter-spacing: -0.224px;
             padding: 8px 16px;
+            border-radius: var(--rounded-sm);
         }
-        .btn-ghost:hover { color: var(--text); background: var(--bg); }
+        .btn-ghost:hover {
+            background: var(--canvas-parchment);
+        }
 
-        /* ── Progress ────────────────────────────────────────── */
-        .progress-panel {
-            text-align: center;
-            padding: 48px 32px;
+        .btn-dark {
+            background: var(--ink);
+            color: #fff;
+            font-size: 14px;
+            font-weight: 400;
+            letter-spacing: -0.224px;
+            padding: 8px 15px;
+            border-radius: var(--rounded-sm);
         }
-        .progress-panel .spinner {
+        .btn-dark:hover { background: #333; }
+
+        /* ── Progress section ────────────────────────────────────── */
+        .progress-section {
+            background: var(--canvas-parchment);
+            text-align: center;
+            padding: 80px 24px;
+        }
+        .progress-section .spinner {
             display: inline-block;
-            width: 28px;
-            height: 28px;
-            border: 2px solid var(--border);
-            border-top-color: var(--accent);
+            width: 32px;
+            height: 32px;
+            border: 2.5px solid var(--hairline);
+            border-top-color: var(--primary);
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
-            margin-bottom: 16px;
+            margin-bottom: 20px;
         }
-        .progress-panel .progress-text {
-            color: var(--text-secondary);
-            font-size: 0.9rem;
+        .progress-section .progress-text {
+            font-size: 21px;
+            font-weight: 600;
+            letter-spacing: 0.011em;
+            color: var(--ink);
         }
         .progress-bar-wrap {
             max-width: 320px;
-            margin: 16px auto 0;
+            margin: 20px auto 0;
             height: 4px;
-            background: var(--border-light);
+            background: var(--hairline);
             border-radius: 2px;
             overflow: hidden;
         }
@@ -207,22 +280,28 @@
         .progress-bar-fill {
             height: 100%;
             width: 0%;
-            background: var(--accent);
+            background: var(--primary);
             border-radius: 2px;
             transition: width 0.4s ease;
         }
         .progress-detail {
-            color: var(--text-muted);
-            font-size: 0.78rem;
+            color: var(--body-muted);
+            font-size: 14px;
+            letter-spacing: -0.224px;
             margin-top: 8px;
         }
         .progress-detail.hidden { display: none; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        /* ── Gallery toolbar ─────────────────────────────────── */
+        /* ── Gallery section ─────────────────────────────────────── */
+        .gallery-section {
+            background: var(--canvas-parchment);
+            padding: 0 0 80px;
+        }
+
         .gallery-toolbar {
-            max-width: 900px;
-            margin: 0 auto 16px;
+            max-width: 980px;
+            margin: 0 auto 20px;
             padding: 0 24px;
             display: flex;
             justify-content: space-between;
@@ -237,14 +316,15 @@
             display: inline-flex;
             align-items: center;
             gap: 6px;
-            font-size: 0.8rem;
-            color: var(--accent);
-            font-weight: 500;
+            font-size: 14px;
+            color: var(--primary);
+            font-weight: 400;
+            letter-spacing: -0.224px;
         }
         .gallery-toolbar .scoring-badge .dot {
             width: 8px;
             height: 8px;
-            background: var(--accent);
+            background: var(--primary);
             border-radius: 50%;
             animation: pulse 1.5s ease-in-out infinite;
         }
@@ -253,57 +333,55 @@
             50% { opacity: 0.3; }
         }
         .gallery-toolbar .count {
-            font-size: 0.85rem;
-            color: var(--text-muted);
+            font-size: 14px;
+            color: var(--body-muted);
+            letter-spacing: -0.224px;
         }
 
-        /* ── Image grid ──────────────────────────────────────── */
+        /* ── Image grid ──────────────────────────────────────────── */
         .grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
             gap: 20px;
-            max-width: 900px;
+            max-width: 980px;
             margin: 0 auto;
             padding: 0 24px;
         }
         .card {
-            background: var(--card-bg);
-            border-radius: var(--radius);
+            background: var(--canvas);
+            border-radius: var(--rounded-lg);
             overflow: hidden;
-            border: 2px solid transparent;
+            border: 1px solid var(--hairline);
             cursor: pointer;
             position: relative;
             transition: all 0.25s ease;
-            box-shadow: var(--shadow-sm);
         }
         .card:hover {
-            box-shadow: var(--shadow-lg);
-            transform: translateY(-3px);
+            border-color: var(--body-muted);
         }
         .card.selected {
-            border-color: var(--accent);
-            box-shadow: 0 0 0 1px var(--accent), var(--shadow);
+            border: 2px solid var(--primary-focus);
         }
         .card img {
             width: 100%;
             display: block;
             object-fit: cover;
-            height: 280px;
-            background: var(--border-light);
+            height: 300px;
+            background: var(--canvas-parchment);
         }
         .card-body {
-            padding: 14px 16px;
+            padding: 16px 20px;
         }
 
         /* Score badge */
         .badge {
             display: inline-block;
-            padding: 3px 12px;
-            border-radius: 20px;
+            padding: 3px 10px;
+            border-radius: var(--rounded-pill);
             font-weight: 600;
-            font-size: 0.75rem;
+            font-size: 12px;
             color: #fff;
-            letter-spacing: 0.02em;
+            letter-spacing: -0.12px;
         }
         .badge.high { background: var(--badge-high); }
         .badge.mid  { background: var(--badge-mid); }
@@ -316,17 +394,17 @@
             gap: 8px;
         }
         .shimmer-bar {
-            width: 50px;
-            height: 22px;
-            border-radius: 20px;
-            background: linear-gradient(90deg, var(--border-light) 25%, var(--border) 50%, var(--border-light) 75%);
+            width: 48px;
+            height: 20px;
+            border-radius: var(--rounded-pill);
+            background: linear-gradient(90deg, var(--canvas-parchment) 25%, var(--hairline) 50%, var(--canvas-parchment) 75%);
             background-size: 200% 100%;
             animation: shimmer 1.5s ease infinite;
         }
         .shimmer-text {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            font-style: italic;
+            font-size: 14px;
+            color: var(--body-muted);
+            letter-spacing: -0.224px;
         }
         @keyframes shimmer {
             0% { background-position: 200% 0; }
@@ -334,21 +412,22 @@
         }
 
         .reason {
-            font-size: 0.78rem;
-            color: var(--text-secondary);
+            font-size: 14px;
+            color: var(--body-muted);
             margin-top: 8px;
-            line-height: 1.45;
+            line-height: 1.43;
+            letter-spacing: -0.224px;
         }
         .poster-link {
             display: inline-block;
             margin-top: 8px;
-            font-size: 0.78rem;
-            color: var(--accent);
-            font-weight: 600;
+            font-size: 14px;
+            color: var(--primary);
+            font-weight: 400;
             text-decoration: none;
-            transition: color 0.2s;
+            letter-spacing: -0.224px;
         }
-        .poster-link:hover { color: var(--accent-hover); text-decoration: underline; }
+        .poster-link:hover { text-decoration: underline; }
 
         /* Checkmark overlay */
         .card.selected::after {
@@ -356,66 +435,64 @@
             position: absolute;
             top: 12px;
             right: 12px;
-            background: var(--accent);
+            background: var(--primary);
             color: #fff;
-            width: 26px;
-            height: 26px;
+            width: 28px;
+            height: 28px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 0.85rem;
+            font-size: 14px;
             font-weight: 700;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
         }
 
-        /* ── Bottom bar (Next / Generate) ────────────────────── */
+        /* ── Bottom bar ──────────────────────────────────────────── */
         .bottom-bar {
-            max-width: 900px;
-            margin: 32px auto;
+            max-width: 980px;
+            margin: 32px auto 0;
             padding: 0 24px;
             text-align: center;
         }
         .bottom-bar .status-text {
-            color: var(--text-muted);
-            font-size: 0.85rem;
+            color: var(--body-muted);
+            font-size: 14px;
+            letter-spacing: -0.224px;
             margin-bottom: 16px;
         }
-        .bottom-bar .btn-row {
-            display: flex;
-            justify-content: center;
-            gap: 12px;
-            flex-wrap: wrap;
-        }
 
-        /* ── Config panel (Step 2) ───────────────────────────── */
+        /* ── Config panel (Step 2) ───────────────────────────────── */
+        .config-section {
+            background: var(--canvas);
+            padding: 80px 24px;
+        }
         .config-header {
             display: flex;
             align-items: center;
-            margin-bottom: 24px;
+            gap: 12px;
+            margin-bottom: 32px;
         }
         .config-header h2 {
-            font-family: var(--font-heading);
-            font-size: 1.3rem;
+            font-size: 28px;
             font-weight: 600;
-        }
-        .config-header .btn-ghost {
-            margin-right: 12px;
+            line-height: 1.14;
+            letter-spacing: -0.224px;
         }
 
-        /* ── Generating overlay ───────────────────────────────── */
+        /* ── Generating overlay ───────────────────────────────────── */
         .generating-status {
             text-align: center;
             padding: 24px;
-            color: var(--text-secondary);
-            font-size: 0.9rem;
+            color: var(--body-muted);
+            font-size: 17px;
+            letter-spacing: -0.374px;
         }
         .generating-status .spinner {
             display: inline-block;
             width: 20px;
             height: 20px;
-            border: 2px solid var(--border);
-            border-top-color: var(--accent);
+            border: 2px solid var(--hairline);
+            border-top-color: var(--primary);
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
             margin-right: 8px;
@@ -429,25 +506,69 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* ── Hide utility ────────────────────────────────────── */
+        /* ── Footer ──────────────────────────────────────────────── */
+        .site-footer {
+            background: var(--canvas-parchment);
+            border-top: 1px solid var(--divider-soft);
+            text-align: center;
+            padding: 24px;
+        }
+        .site-footer p {
+            font-size: 12px;
+            color: var(--ink-muted-48);
+            letter-spacing: -0.12px;
+        }
+        .site-footer a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+        .site-footer a:hover { text-decoration: underline; }
+
+        /* ── Hide utility ────────────────────────────────────────── */
         .hidden { display: none !important; }
+
+        /* ── Responsive ──────────────────────────────────────────── */
+        @media (max-width: 833px) {
+            .hero h1 { font-size: 40px; }
+            .hero p { font-size: 17px; }
+            .hero { padding: 48px 24px 32px; }
+            .grid { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+        }
+        @media (max-width: 640px) {
+            .hero h1 { font-size: 34px; }
+            .hero { padding: 40px 16px 24px; }
+            .sub-nav-title { font-size: 17px; }
+            .grid { grid-template-columns: 1fr; gap: 16px; }
+            .progress-section { padding: 48px 16px; }
+            .field-row { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 419px) {
+            .hero h1 { font-size: 28px; }
+        }
     </style>
 </head>
 <body>
 
-<!-- ── Header ────────────────────────────────────────────────── -->
-<div class="header">
-    <div class="header-left">
-        <h1 id="appTitle"></h1>
-        <p id="appSubtitle"></p>
+<!-- ── Sub-nav (frosted) ─────────────────────────────────────────── -->
+<nav class="sub-nav">
+    <div class="sub-nav-inner">
+        <span class="sub-nav-title" id="navTitle"></span>
+        <div class="sub-nav-right">
+            <div class="lang-toggle" id="langToggle">
+                <button data-lang="en" class="active">EN</button>
+                <button data-lang="zh">中文</button>
+            </div>
+        </div>
     </div>
-    <div class="lang-toggle" id="langToggle">
-        <button data-lang="en" class="active">EN</button>
-        <button data-lang="zh">中文</button>
-    </div>
-</div>
+</nav>
 
-<!-- ── Phase: Search ─────────────────────────────────────────── -->
+<!-- ── Hero ───────────────────────────────────────────────────────── -->
+<section class="hero" id="heroSection">
+    <h1 id="appTitle"></h1>
+    <p id="appSubtitle"></p>
+</section>
+
+<!-- ── Phase: Search ─────────────────────────────────────────────── -->
 <div class="panel" id="searchPanel">
     <label id="lbl_keyword"></label>
     <input type="text" id="keyword" placeholder="">
@@ -469,18 +590,18 @@
     <button class="btn btn-primary" id="btnSearch"></button>
 </div>
 
-<!-- ── Phase: Progress (before images load) ──────────────────── -->
-<div class="panel progress-panel hidden" id="progressPanel">
+<!-- ── Phase: Progress ───────────────────────────────────────────── -->
+<section class="progress-section hidden" id="progressPanel">
     <div class="spinner"></div>
     <p class="progress-text" id="progressText"></p>
     <div class="progress-bar-wrap hidden" id="progressBarWrap">
         <div class="progress-bar-fill" id="progressBarFill"></div>
     </div>
     <p class="progress-detail hidden" id="progressDetail"></p>
-</div>
+</section>
 
-<!-- ── Phase: Gallery ────────────────────────────────────────── -->
-<div class="hidden" id="gallerySection">
+<!-- ── Phase: Gallery ────────────────────────────────────────────── -->
+<section class="gallery-section hidden" id="gallerySection">
     <div class="gallery-toolbar" id="galleryToolbar">
         <div class="left">
             <span class="scoring-badge hidden" id="scoringBadge">
@@ -497,43 +618,48 @@
     <div class="grid" id="grid"></div>
     <div class="bottom-bar" id="bottomBar">
         <p class="status-text" id="statusText"></p>
-        <div class="btn-row">
-            <button class="btn btn-primary" id="btnNext" disabled></button>
+        <button class="btn btn-primary" id="btnNext" disabled style="max-width:400px;margin:0 auto;"></button>
+    </div>
+</section>
+
+<!-- ── Phase: Config ─────────────────────────────────────────────── -->
+<section class="config-section hidden" id="configPanel">
+    <div class="panel" style="margin-bottom:0;">
+        <div class="config-header">
+            <button class="btn btn-ghost" id="btnBack">&#8592;</button>
+            <h2 id="configTitle"></h2>
         </div>
-    </div>
-</div>
 
-<!-- ── Phase: Config ─────────────────────────────────────────── -->
-<div class="panel hidden" id="configPanel">
-    <div class="config-header">
-        <button class="btn btn-ghost" id="btnBack">&#8592;</button>
-        <h2 id="configTitle"></h2>
-    </div>
+        <label id="lbl_productName"></label>
+        <input type="text" id="productName" placeholder="">
 
-    <label id="lbl_productName"></label>
-    <input type="text" id="productName" placeholder="">
-
-    <div class="field-row">
-        <div>
-            <label id="lbl_price"></label>
-            <input type="text" id="price" placeholder="">
+        <div class="field-row">
+            <div>
+                <label id="lbl_price"></label>
+                <input type="text" id="price" placeholder="">
+            </div>
+            <div>
+                <label id="lbl_tagline"></label>
+                <input type="text" id="tagline" placeholder="">
+            </div>
         </div>
-        <div>
-            <label id="lbl_tagline"></label>
-            <input type="text" id="tagline" placeholder="">
+
+        <label id="lbl_logoUrl"></label>
+        <input type="text" id="logoUrl" placeholder="">
+
+        <div class="generating-status hidden" id="generatingStatus">
+            <span class="spinner"></span>
+            <span id="generatingText"></span>
         </div>
+
+        <button class="btn btn-primary" id="btnGenerate" style="margin-top: 8px;"></button>
     </div>
+</section>
 
-    <label id="lbl_logoUrl"></label>
-    <input type="text" id="logoUrl" placeholder="">
-
-    <div class="generating-status hidden" id="generatingStatus">
-        <span class="spinner"></span>
-        <span id="generatingText"></span>
-    </div>
-
-    <button class="btn btn-primary" id="btnGenerate" style="margin-top: 8px;"></button>
-</div>
+<!-- ── Footer ────────────────────────────────────────────────────── -->
+<footer class="site-footer" id="siteFooter">
+    <p id="footerText"></p>
+</footer>
 
 <script>
 // ── i18n ────────────────────────────────────────────────────────
@@ -541,6 +667,7 @@ const T = {
     en: {
         title: "Pinterest Poster Agent",
         subtitle: "Discover, curate & generate stunning product posters",
+        nav_title: "Poster Agent",
         keyword_label: "What product are you looking for?",
         keyword_ph: "e.g. silk skirts, evening dresses, summer hats\u2026",
         category_label: "Product Category (optional)",
@@ -576,10 +703,12 @@ const T = {
         select_prompt: "Select images to continue",
         images_found: "images found",
         scoring_complete: "Scoring complete",
+        footer: "Built with Pinterest Poster Agent",
     },
     zh: {
         title: "Pinterest \u6d77\u62a5\u52a9\u624b",
         subtitle: "\u53d1\u73b0\u3001\u7b5b\u9009\u5e76\u751f\u6210\u7cbe\u7f8e\u4ea7\u54c1\u6d77\u62a5",
+        nav_title: "\u6d77\u62a5\u52a9\u624b",
         keyword_label: "\u60a8\u60f3\u641c\u7d22\u4ec0\u4e48\u4ea7\u54c1\uff1f",
         keyword_ph: "\u4f8b\u5982\uff1a\u4e1d\u7ef8\u534a\u88d9\u3001\u665a\u793c\u670d\u3001\u590f\u5b63\u5e3d\u5b50\u2026",
         category_label: "\u4ea7\u54c1\u7c7b\u522b\uff08\u53ef\u9009\uff09",
@@ -615,6 +744,7 @@ const T = {
         select_prompt: "\u9009\u62e9\u56fe\u7247\u4ee5\u7ee7\u7eed",
         images_found: "\u5f20\u56fe\u7247",
         scoring_complete: "\u8bc4\u5206\u5b8c\u6210",
+        footer: "\u7531 Pinterest \u6d77\u62a5\u52a9\u624b\u6784\u5efa",
     }
 };
 
@@ -623,10 +753,12 @@ function t(key) { return T[lang][key] || T.en[key] || key; }
 
 // ── DOM refs ────────────────────────────────────────────────────
 const $  = id => document.getElementById(id);
+const heroSection    = $("heroSection");
 const searchPanel    = $("searchPanel");
 const progressPanel  = $("progressPanel");
 const gallerySection = $("gallerySection");
 const configPanel    = $("configPanel");
+const siteFooter     = $("siteFooter");
 const grid           = $("grid");
 
 let results    = [];
@@ -641,6 +773,7 @@ function applyLang() {
         b.classList.toggle("active", b.dataset.lang === lang);
     });
 
+    $("navTitle").textContent     = t("nav_title");
     $("appTitle").textContent     = t("title");
     $("appSubtitle").textContent  = t("subtitle");
     $("lbl_keyword").textContent  = t("keyword_label");
@@ -663,6 +796,7 @@ function applyLang() {
     $("tagline").placeholder      = t("tagline_ph");
     $("lbl_logoUrl").textContent  = t("logo_url");
     $("logoUrl").placeholder      = t("logo_url_ph");
+    $("footerText").textContent   = t("footer");
     updateGenerateBtn();
     updateNextBtn();
     if (results.length) renderGalleryMeta();
@@ -676,10 +810,19 @@ $("langToggle").addEventListener("click", e => {
 
 // ── Phase management ────────────────────────────────────────────
 function showPhase(phase) {
+    heroSection.classList.toggle("hidden", phase !== "search");
     searchPanel.classList.toggle("hidden", phase !== "search");
     progressPanel.classList.toggle("hidden", phase !== "progress");
     gallerySection.classList.toggle("hidden", phase !== "gallery");
     configPanel.classList.toggle("hidden", phase !== "config");
+
+    // Footer always visible except during progress
+    siteFooter.classList.toggle("hidden", phase === "progress");
+
+    // Parchment bg for gallery, white for others
+    document.body.style.background = phase === "gallery"
+        ? "var(--canvas-parchment)"
+        : "var(--canvas)";
 }
 
 // ── Helpers ─────────────────────────────────────────────────────
@@ -807,7 +950,6 @@ async function pollStatus() {
         const data = await fetch("/api/search/status").then(r => r.json());
         const msg = data.progress || "";
 
-        // If images are ready, switch to gallery view
         if (data.images_ready) {
             await refreshResults();
             if (gallerySection.classList.contains("hidden")) {
@@ -815,7 +957,6 @@ async function pollStatus() {
             }
         }
 
-        // Update progress bar in progress panel (before gallery appears)
         if (progressPanel && !progressPanel.classList.contains("hidden")) {
             const scoringMatch = msg.match(/Scoring pin (\d+) of (\d+)/);
             const scoredMatch  = msg.match(/Scored pin (\d+) of (\d+): (\d+)\/10/);
@@ -843,7 +984,6 @@ async function pollStatus() {
             }
         }
 
-        // Update gallery scoring badge
         if (!gallerySection.classList.contains("hidden")) {
             renderGalleryMeta();
         }
@@ -949,7 +1089,6 @@ $("btnGenerate").addEventListener("click", async () => {
         selected.clear();
         await refreshResults();
 
-        // Switch back to gallery to show poster links
         setTimeout(() => {
             showPhase("gallery");
             renderGalleryMeta();
