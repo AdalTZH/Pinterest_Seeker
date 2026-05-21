@@ -687,7 +687,7 @@
     <div class="field-row">
         <div>
             <label id="lbl_maxPins"></label>
-            <input type="number" id="maxPins" value="40" min="1" max="100">
+            <input type="number" id="maxPins" value="3" min="1" max="100">
         </div>
         <div>
             <label id="lbl_timeout"></label>
@@ -987,7 +987,7 @@ $("btnSearch").addEventListener("click", async () => {
             body: JSON.stringify({
                 keyword,
                 category: $("category").value.trim() || "",
-                max_pins: parseInt($("maxPins").value) || 40,
+                max_pins: parseInt($("maxPins").value) || 3,
                 session_timeout_s: parseInt($("timeout").value) || 180,
             }),
         });
