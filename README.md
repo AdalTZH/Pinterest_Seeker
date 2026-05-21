@@ -5,7 +5,7 @@ A fully autonomous AI agent + human-in-the-loop review system that browses Pinte
 ## How It Works
 
 1. **Search**: User opens the web UI and types what product they're looking for (e.g. "evening dresses", "silk skirts").
-2. **Agent Browsing**: The AI agent autonomously browses Pinterest — scrolls the feed, screenshots each pin thumbnail, and scores them with gpt-5.4-mini. Progress is shown in real-time.
+2. **Agent Browsing**: The AI agent uses [Scrapling](https://github.com/CYBERAD7/scrapling) (with anti-bot bypass) to browse Pinterest — extracts pin thumbnail URLs, downloads them, and scores with gpt-5.4-mini. Progress is shown in real-time.
 3. **Review**: Once scoring is done, a grid of scored images appears. User reviews the AI scores and reasons, selects the images they like.
 4. **Poster Generation**: User fills in product details (name, price, tagline) and clicks "Generate". The agent extracts full-res images and generates posters via nanoBanana Pro.
 
@@ -19,7 +19,7 @@ A fully autonomous AI agent + human-in-the-loop review system that browses Pinte
         ↓
 ┌──────────────────────────────────────────────┐
 │  PHASE 1 — Agent Scoring (automated)         │
-│  Playwright → Pinterest → Scroll → Score     │
+│  Scrapling → Pinterest → Scroll → Score      │
 │  Guardrails: pin cap, scroll cap, timeout,   │
 │  error circuit breaker, stale detector        │
 │  UI shows real-time progress                 │
@@ -46,7 +46,7 @@ A fully autonomous AI agent + human-in-the-loop review system that browses Pinte
 git clone https://github.com/AdalTZH/Pinterest_Seeker.git
 cd Pinterest_Seeker
 pip install -r requirements.txt
-playwright install chromium
+scrapling install
 
 # Configure environment
 cp .env.example .env
@@ -84,7 +84,7 @@ pinterest-poster-agent/
 ├── main.py                  # Entry point — launches FastAPI server
 ├── server.py                # FastAPI: search, scoring, review, generate
 ├── agent/
-│   ├── browser_agent.py     # Browser setup
+│   ├── browser_agent.py     # Scrapling StealthyFetcher wrapper
 │   ├── scorer.py            # Phase 1 scoring pipeline
 │   ├── fullres_fetcher.py   # Phase 3 full-res extraction
 │   ├── guardrails.py        # BrowsingGuardrail class

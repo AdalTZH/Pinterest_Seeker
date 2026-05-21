@@ -1,5 +1,4 @@
-browser-use
-playwright
+scrapling[all]
 openai
 fastapi
 uvicorn

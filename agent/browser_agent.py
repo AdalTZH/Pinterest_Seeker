@@ -1,20 +1,20 @@
-"""Browser-use agent setup — thin wrapper around Playwright lifecycle."""
+"""Browser agent setup — thin wrapper around Scrapling's StealthyFetcher.
+
+Provides a convenience helper for one-off page visits with anti-bot bypass.
+The main scraping loops in scorer.py and fullres_fetcher.py call
+StealthyFetcher directly via page_action callbacks.
+"""
 
 from __future__ import annotations
 
-from playwright.async_api import Browser, BrowserContext, async_playwright
+from scrapling.fetchers import StealthyFetcher
 
 
-async def launch_browser(headless: bool = False) -> tuple[Browser, BrowserContext]:
-    """Launch a Chromium instance and return (browser, context)."""
-    pw = await async_playwright().start()
-    browser = await pw.chromium.launch(headless=headless)
-    context = await browser.new_context(
-        viewport={"width": 1280, "height": 900},
-        user_agent=(
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-            "AppleWebKit/537.36 (KHTML, like Gecko) "
-            "Chrome/125.0.0.0 Safari/537.36"
-        ),
-    )
-    return browser, context
+async def fetch_page(url: str, **kwargs):
+    """Fetch a page using StealthyFetcher with sensible defaults."""
+    defaults = {
+        "headless": True,
+        "network_idle": True,
+    }
+    defaults.update(kwargs)
+    return await StealthyFetcher.async_fetch(url, **defaults)

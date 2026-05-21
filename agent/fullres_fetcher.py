@@ -1,4 +1,7 @@
-"""Phase 3 — Re-visit a pin page and extract the full-resolution image URL."""
+"""Phase 3 — Re-visit a pin page and extract the full-resolution image URL.
+
+Uses Scrapling's StealthyFetcher for anti-bot bypass when visiting pin pages.
+"""
 
 from __future__ import annotations
 
@@ -6,7 +9,7 @@ import base64
 import os
 
 from openai import AsyncOpenAI
-from playwright.async_api import async_playwright
+from scrapling.fetchers import StealthyFetcher
 
 from agent.prompts import FULLRES_EXTRACTION_PROMPT
 
@@ -27,41 +30,46 @@ def _upgrade_to_original(url: str) -> str:
 
 async def fetch_full_res_url(pin_url: str) -> str:
     """Open a pin page and return the highest-resolution image URL."""
-    async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=True)
-        page = await browser.new_page()
-        await page.goto(pin_url, wait_until="networkidle")
-        await page.wait_for_timeout(2000)
+    result: dict = {"url": None, "screenshot": None}
 
-        # Strategy 1: og:image meta tag (covers ~90% of cases)
+    async def extract(page):
+        """Extract og:image or take screenshot for fallback."""
         og_image = await page.get_attribute(
             'meta[property="og:image"]', "content"
         )
         if og_image:
-            await browser.close()
-            return _upgrade_to_original(og_image)
+            result["url"] = _upgrade_to_original(og_image)
+        else:
+            result["screenshot"] = await page.screenshot(full_page=False)
 
-        # Strategy 2: gpt-5.4-mini reads the page visually
-        screenshot = await page.screenshot(full_page=False)
-        b64 = base64.b64encode(screenshot).decode()
+    await StealthyFetcher.async_fetch(
+        pin_url,
+        headless=True,
+        network_idle=True,
+        page_action=extract,
+    )
 
-        response = await client.chat.completions.create(
-            model=MODEL,
-            messages=[
-                {
-                    "role": "user",
-                    "content": [
-                        {
-                            "type": "image_url",
-                            "image_url": {
-                                "url": f"data:image/jpeg;base64,{b64}"
-                            },
+    if result["url"]:
+        return result["url"]
+
+    # Fallback: gpt-5.4-mini reads the page visually
+    b64 = base64.b64encode(result["screenshot"]).decode()
+
+    response = await client.chat.completions.create(
+        model=MODEL,
+        messages=[
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "image_url",
+                        "image_url": {
+                            "url": f"data:image/jpeg;base64,{b64}"
                         },
-                        {"type": "text", "text": FULLRES_EXTRACTION_PROMPT},
-                    ],
-                }
-            ],
-        )
-
-        await browser.close()
-        return response.choices[0].message.content.strip()
+                    },
+                    {"type": "text", "text": FULLRES_EXTRACTION_PROMPT},
+                ],
+            }
+        ],
+    )
+    return response.choices[0].message.content.strip()

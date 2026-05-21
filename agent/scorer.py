@@ -1,4 +1,8 @@
-"""Phase 1 — Thumbnail scoring pipeline using gpt-5.4-mini."""
+"""Phase 1 — Thumbnail scoring pipeline using Scrapling + gpt-5.4-mini.
+
+Uses Scrapling's StealthyFetcher to browse Pinterest (with anti-bot bypass),
+extract pin thumbnail URLs, then downloads and scores each image.
+"""
 
 from __future__ import annotations
 
@@ -7,8 +11,9 @@ import base64
 import json
 import os
 
+import httpx
 from openai import AsyncOpenAI
-from playwright.async_api import async_playwright
+from scrapling.fetchers import StealthyFetcher
 
 from agent.guardrails import BrowsingGuardrail
 from agent.prompts import THUMBNAIL_SCORING_PROMPT
@@ -22,7 +27,7 @@ MODEL = os.getenv("AGENT_MODEL", "openai/gpt-5.4-mini")
 
 
 async def score_thumbnail(img_bytes: bytes, category: str) -> dict:
-    """Send a thumbnail screenshot to the vision model and return a score."""
+    """Send a thumbnail image to the vision model and return a score."""
     b64 = base64.b64encode(img_bytes).decode()
     prompt = THUMBNAIL_SCORING_PROMPT.format(category=category)
 
@@ -51,7 +56,7 @@ async def run_scoring_phase(
     max_scrolls: int = 8,
     session_timeout_s: int = 180,
 ) -> list[dict]:
-    """Browse Pinterest, scroll the feed, screenshot & score each pin card."""
+    """Use Scrapling to browse Pinterest, extract pin data, and score thumbnails."""
 
     guard = BrowsingGuardrail(
         max_pins=max_pins,
@@ -61,19 +66,12 @@ async def run_scoring_phase(
         max_stale_scrolls=2,
     )
 
-    results: list[dict] = []
+    collected_pins: list[dict] = []
 
-    async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=False)
-        page = await browser.new_page()
-
-        await page.goto("https://www.pinterest.com")
-        await page.wait_for_timeout(2000)
-        await page.fill('[data-test-id="search-box-input"]', keyword)
-        await page.keyboard.press("Enter")
+    async def scroll_and_collect(page):
+        """Scroll Pinterest feed and extract pin data via page_action."""
         await page.wait_for_timeout(3000)
 
-        # ── Scroll loop with guardrail ───────────────────────────────
         while not guard.should_stop:
             pin_cards = await page.query_selector_all('[data-test-id="pin"]')
             guard.record_scroll(len(pin_cards))
@@ -89,46 +87,63 @@ async def run_scoring_phase(
             await page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
             await page.wait_for_timeout(1500)
 
-        # ── Pin scoring loop ─────────────────────────────────────────
         pin_cards = await page.query_selector_all('[data-test-id="pin"]')
-        print(
-            f"\nScoring up to {max_pins} pins from "
-            f"{len(pin_cards)} visible...\n"
-        )
-
-        for i, card in enumerate(pin_cards):
-            if guard.should_stop:
-                print(f"\n⛔ Stopped: {guard.stop_reason}")
-                break
-
+        for card in pin_cards[:max_pins]:
             try:
                 img_el = await card.query_selector("img")
-                thumbnail_url = (
+                thumb_url = (
                     await img_el.get_attribute("src") if img_el else None
                 )
 
                 link_el = await card.query_selector("a")
-                pin_href = (
+                href = (
                     await link_el.get_attribute("href") if link_el else None
                 )
                 pin_url = (
-                    f"https://www.pinterest.com{pin_href}"
-                    if pin_href
-                    else None
+                    f"https://www.pinterest.com{href}" if href else None
                 )
 
-                if not thumbnail_url or not pin_url:
-                    guard.record_error()
-                    continue
+                if thumb_url and pin_url:
+                    collected_pins.append(
+                        {"thumbnail_url": thumb_url, "pin_url": pin_url}
+                    )
+            except Exception:
+                continue
 
-                img_bytes = await card.screenshot()
+    search_url = (
+        f"https://www.pinterest.com/search/pins/"
+        f"?q={keyword.replace(' ', '+')}"
+    )
+
+    print(f"  Fetching {search_url} with Scrapling StealthyFetcher...")
+    await StealthyFetcher.async_fetch(
+        search_url,
+        headless=True,
+        network_idle=True,
+        page_action=scroll_and_collect,
+        timeout=session_timeout_s * 1000,
+    )
+
+    print(f"\n  Extracted {len(collected_pins)} pins. Scoring with {MODEL}...\n")
+
+    results: list[dict] = []
+
+    async with httpx.AsyncClient() as http:
+        for i, pin in enumerate(collected_pins):
+            if guard.should_stop:
+                print(f"\n  Stopped: {guard.stop_reason}")
+                break
+
+            try:
+                img_resp = await http.get(pin["thumbnail_url"])
+                img_bytes = img_resp.content
                 score_result = await score_thumbnail(img_bytes, category)
 
                 results.append(
                     {
                         "id": i + 1,
-                        "thumbnail_url": thumbnail_url,
-                        "pin_url": pin_url,
+                        "thumbnail_url": pin["thumbnail_url"],
+                        "pin_url": pin["pin_url"],
                         "full_res_url": None,
                         "score": score_result["score"],
                         "reason": score_result["reason"],
@@ -144,7 +159,7 @@ async def run_scoring_phase(
                     f"Score {score_result['score']}/10 — "
                     f"{score_result['reason']}"
                 )
-                await asyncio.sleep(0.5)
+                await asyncio.sleep(0.3)
 
             except Exception as e:
                 guard.record_error()
@@ -154,9 +169,7 @@ async def run_scoring_phase(
                 )
                 continue
 
-        await browser.close()
-
-    print(f"\n✅ Finished — {guard.stop_reason or 'all pins scored'}")
+    print(f"\n  Finished — {guard.stop_reason or 'all pins scored'}")
     print(f"   {guard.status_line()}")
 
     os.makedirs("data", exist_ok=True)
