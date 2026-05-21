@@ -1,0 +1,7 @@
+scrapling[all]
+openai
+fastapi
+uvicorn
+httpx
+python-dotenv
+aiosqlite

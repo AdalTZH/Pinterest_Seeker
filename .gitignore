@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+
+# Environment
+.env
+.venv/
+venv/
+
+# Data & output
+data/scored_results.json
+db/pins_seen.sqlite
+output/posters/*
+!output/posters/.gitkeep
+
+# IDE
+.vscode/
+.idea/
+*.swp

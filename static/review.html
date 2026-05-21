@@ -1,0 +1,1232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pinterest Poster Agent</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* ── Brand & Accent ─────────────────────────── */
+            --primary: #0066cc;
+            --primary-focus: #0071e3;
+            --primary-on-dark: #2997ff;
+
+            /* ── Surface ────────────────────────────────── */
+            --canvas: #ffffff;
+            --canvas-parchment: #f5f5f7;
+            --surface-pearl: #fafafc;
+            --surface-tile-dark: #1d1d1f;
+
+            /* ── Text ───────────────────────────────────── */
+            --ink: #1d1d1f;
+            --ink-muted-80: #333333;
+            --ink-muted-48: #7a7a7a;
+            --body-muted: #86868b;
+
+            /* ── Hairlines ──────────────────────────────── */
+            --divider-soft: rgba(0, 0, 0, 0.04);
+            --hairline: #d2d2d7;
+
+            /* ── Score badges ───────────────────────────── */
+            --badge-high: #34c759;
+            --badge-mid: #ff9f0a;
+            --badge-low: #ff3b30;
+
+            /* ── Radius ─────────────────────────────────── */
+            --rounded-sm: 8px;
+            --rounded-md: 12px;
+            --rounded-lg: 18px;
+            --rounded-pill: 9999px;
+
+            /* ── Elevation ──────────────────────────────── */
+            --product-shadow: 0 3px 5px rgba(0, 0, 0, 0.04), 0 8px 30px rgba(0, 0, 0, 0.08);
+
+            /* ── Typography ─────────────────────────────── */
+            --font: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: var(--font);
+            background: var(--canvas);
+            color: var(--ink);
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* ── Sub-nav / header bar ────────────────────────────────── */
+        .sub-nav {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(245, 245, 247, 0.8);
+            backdrop-filter: saturate(180%) blur(20px);
+            -webkit-backdrop-filter: saturate(180%) blur(20px);
+            border-bottom: 1px solid var(--divider-soft);
+            height: 52px;
+        }
+        .sub-nav-inner {
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 0 24px;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .sub-nav-title {
+            font-size: 21px;
+            font-weight: 600;
+            letter-spacing: 0.011em;
+            color: var(--ink);
+        }
+        .sub-nav-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .lang-toggle {
+            display: flex;
+            border-radius: var(--rounded-pill);
+            overflow: hidden;
+            border: 1px solid var(--hairline);
+        }
+        .lang-toggle button {
+            padding: 5px 14px;
+            font-size: 12px;
+            font-weight: 400;
+            letter-spacing: -0.12px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            color: var(--ink-muted-48);
+            transition: all 0.2s;
+            font-family: var(--font);
+        }
+        .lang-toggle button.active {
+            background: var(--canvas);
+            color: var(--ink);
+        }
+
+        /* ── Hero section ────────────────────────────────────────── */
+        .hero {
+            text-align: center;
+            padding: 80px 24px 48px;
+            background: var(--canvas);
+        }
+        .hero h1 {
+            font-size: 56px;
+            font-weight: 600;
+            line-height: 1.07;
+            letter-spacing: -0.28px;
+            color: var(--ink);
+        }
+        .hero p {
+            font-size: 21px;
+            font-weight: 400;
+            line-height: 1.19;
+            letter-spacing: 0.011em;
+            color: var(--body-muted);
+            margin-top: 8px;
+        }
+
+        /* ── Panels ──────────────────────────────────────────────── */
+        .panel {
+            max-width: 580px;
+            margin: 0 auto 48px;
+            padding: 32px;
+        }
+
+        .panel label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--body-muted);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+        }
+        .panel input[type="text"],
+        .panel input[type="number"] {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid var(--hairline);
+            border-radius: var(--rounded-pill);
+            font-size: 17px;
+            font-weight: 400;
+            line-height: 1.47;
+            letter-spacing: -0.374px;
+            font-family: var(--font);
+            color: var(--ink);
+            background: var(--canvas);
+            margin-bottom: 20px;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .panel input:focus {
+            outline: none;
+            border-color: var(--primary-focus);
+            box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.15);
+        }
+        .field-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        /* ── Buttons ─────────────────────────────────────────────── */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--font);
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .btn:active { transform: scale(0.95); }
+
+        .btn-primary {
+            background: var(--primary);
+            color: #fff;
+            font-size: 17px;
+            font-weight: 400;
+            line-height: 1.0;
+            padding: 11px 22px;
+            border-radius: var(--rounded-pill);
+            width: 100%;
+        }
+        .btn-primary:hover { background: var(--primary-focus); }
+        .btn-primary:disabled {
+            background: var(--hairline);
+            color: var(--ink-muted-48);
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--primary);
+            font-size: 17px;
+            font-weight: 400;
+            padding: 11px 22px;
+            border-radius: var(--rounded-pill);
+            border: 1px solid var(--primary);
+        }
+        .btn-secondary:hover {
+            background: var(--primary);
+            color: #fff;
+        }
+
+        .btn-ghost {
+            background: transparent;
+            color: var(--primary);
+            font-size: 14px;
+            font-weight: 400;
+            letter-spacing: -0.224px;
+            padding: 8px 16px;
+            border-radius: var(--rounded-sm);
+        }
+        .btn-ghost:hover {
+            background: var(--canvas-parchment);
+        }
+
+        .btn-dark {
+            background: var(--ink);
+            color: #fff;
+            font-size: 14px;
+            font-weight: 400;
+            letter-spacing: -0.224px;
+            padding: 8px 15px;
+            border-radius: var(--rounded-sm);
+        }
+        .btn-dark:hover { background: #333; }
+
+        /* ── Progress section ────────────────────────────────────── */
+        .progress-section {
+            background: var(--canvas-parchment);
+            text-align: center;
+            padding: 80px 24px;
+        }
+        .progress-section .spinner {
+            display: inline-block;
+            width: 32px;
+            height: 32px;
+            border: 2.5px solid var(--hairline);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-bottom: 20px;
+        }
+        .progress-section .progress-text {
+            font-size: 21px;
+            font-weight: 600;
+            letter-spacing: 0.011em;
+            color: var(--ink);
+        }
+        .progress-bar-wrap {
+            max-width: 320px;
+            margin: 20px auto 0;
+            height: 4px;
+            background: var(--hairline);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        .progress-bar-wrap.hidden { display: none; }
+        .progress-bar-fill {
+            height: 100%;
+            width: 0%;
+            background: var(--primary);
+            border-radius: 2px;
+            transition: width 0.4s ease;
+        }
+        .progress-detail {
+            color: var(--body-muted);
+            font-size: 14px;
+            letter-spacing: -0.224px;
+            margin-top: 8px;
+        }
+        .progress-detail.hidden { display: none; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ── Gallery section ─────────────────────────────────────── */
+        .gallery-section {
+            background: var(--canvas-parchment);
+            padding: 0 0 80px;
+        }
+
+        .gallery-toolbar {
+            max-width: 980px;
+            margin: 0 auto 20px;
+            padding: 0 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .gallery-toolbar .left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .gallery-toolbar .scoring-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 14px;
+            color: var(--primary);
+            font-weight: 400;
+            letter-spacing: -0.224px;
+        }
+        .gallery-toolbar .scoring-badge .dot {
+            width: 8px;
+            height: 8px;
+            background: var(--primary);
+            border-radius: 50%;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+        .gallery-toolbar .count {
+            font-size: 14px;
+            color: var(--body-muted);
+            letter-spacing: -0.224px;
+        }
+
+        /* ── Image grid ──────────────────────────────────────────── */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 20px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+        .card {
+            background: var(--canvas);
+            border-radius: var(--rounded-lg);
+            overflow: hidden;
+            border: 1px solid var(--hairline);
+            cursor: pointer;
+            position: relative;
+            transition: all 0.25s ease;
+        }
+        .card:hover {
+            border-color: var(--body-muted);
+        }
+        .card.selected {
+            border: 2px solid var(--primary-focus);
+        }
+        .card img {
+            width: 100%;
+            display: block;
+            object-fit: cover;
+            height: 300px;
+            background: var(--canvas-parchment);
+        }
+        .card-body {
+            padding: 16px 20px;
+        }
+
+        /* Score badge */
+        .badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: var(--rounded-pill);
+            font-weight: 600;
+            font-size: 12px;
+            color: #fff;
+            letter-spacing: -0.12px;
+        }
+        .badge.high { background: var(--badge-high); }
+        .badge.mid  { background: var(--badge-mid); }
+        .badge.low  { background: var(--badge-low); }
+
+        /* Score loading shimmer */
+        .score-loading {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .shimmer-bar {
+            width: 48px;
+            height: 20px;
+            border-radius: var(--rounded-pill);
+            background: linear-gradient(90deg, var(--canvas-parchment) 25%, var(--hairline) 50%, var(--canvas-parchment) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s ease infinite;
+        }
+        .shimmer-text {
+            font-size: 14px;
+            color: var(--body-muted);
+            letter-spacing: -0.224px;
+        }
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        .reason {
+            font-size: 14px;
+            color: var(--body-muted);
+            margin-top: 8px;
+            line-height: 1.43;
+            letter-spacing: -0.224px;
+        }
+        .poster-link {
+            display: inline-block;
+            margin-top: 8px;
+            font-size: 14px;
+            color: var(--primary);
+            font-weight: 400;
+            text-decoration: none;
+            letter-spacing: -0.224px;
+        }
+        .poster-link:hover { text-decoration: underline; }
+
+        /* Checkmark overlay */
+        .card.selected::after {
+            content: "\2713";
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: var(--primary);
+            color: #fff;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        /* ── Bottom bar ──────────────────────────────────────────── */
+        .bottom-bar {
+            max-width: 980px;
+            margin: 32px auto 0;
+            padding: 0 24px;
+            text-align: center;
+        }
+        .bottom-bar .status-text {
+            color: var(--body-muted);
+            font-size: 14px;
+            letter-spacing: -0.224px;
+            margin-bottom: 16px;
+        }
+
+        /* ── Generating overlay ───────────────────────────────────── */
+        .generating-status {
+            text-align: center;
+            padding: 24px;
+            color: var(--body-muted);
+            font-size: 17px;
+            letter-spacing: -0.374px;
+        }
+        .generating-status .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--hairline);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+
+        /* Fade-in animation for scores */
+        .score-appear { animation: fadeIn 0.4s ease-out; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ── Footer ──────────────────────────────────────────────── */
+        .site-footer {
+            background: var(--canvas-parchment);
+            border-top: 1px solid var(--divider-soft);
+            text-align: center;
+            padding: 24px;
+        }
+        .site-footer p {
+            font-size: 12px;
+            color: var(--ink-muted-48);
+            letter-spacing: -0.12px;
+        }
+        .site-footer a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+        .site-footer a:hover { text-decoration: underline; }
+
+        /* ── Poster generation page ────────────────────────────────── */
+        .poster-page {
+            background: var(--canvas-parchment);
+            padding: 0 0 80px;
+        }
+        .poster-page-header {
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 32px 24px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .poster-page-header h2 {
+            font-size: 28px;
+            font-weight: 600;
+            letter-spacing: -0.14px;
+            color: var(--ink);
+        }
+        .poster-page-header .subtitle {
+            font-size: 14px;
+            color: var(--body-muted);
+            letter-spacing: -0.224px;
+            margin-top: 4px;
+        }
+        .poster-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+            gap: 24px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+        .poster-card {
+            background: var(--canvas);
+            border-radius: var(--rounded-lg);
+            border: 1px solid var(--hairline);
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        .poster-card.done {
+            border-color: var(--badge-high);
+        }
+        .poster-card.error {
+            border-color: var(--badge-low);
+        }
+        .poster-placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 400px;
+            gap: 16px;
+            padding: 40px;
+            background: var(--canvas-parchment);
+        }
+        .poster-placeholder .spinner-lg {
+            width: 48px;
+            height: 48px;
+            border: 3px solid var(--hairline);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        .poster-placeholder .gen-text {
+            font-size: 17px;
+            font-weight: 400;
+            color: var(--body-muted);
+            letter-spacing: -0.374px;
+        }
+        .poster-placeholder .source-thumb {
+            width: 80px;
+            height: 80px;
+            border-radius: var(--rounded-md);
+            object-fit: cover;
+            border: 1px solid var(--hairline);
+            margin-bottom: 8px;
+        }
+        .poster-result {
+            position: relative;
+        }
+        .poster-result img {
+            width: 100%;
+            display: block;
+        }
+        .poster-result .poster-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 16px 20px;
+            background: linear-gradient(transparent, rgba(0,0,0,0.6));
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .poster-result .poster-overlay a {
+            color: #fff;
+            font-size: 14px;
+            font-weight: 400;
+            text-decoration: none;
+            letter-spacing: -0.224px;
+            padding: 6px 16px;
+            border: 1px solid rgba(255,255,255,0.5);
+            border-radius: var(--rounded-pill);
+            transition: all 0.2s;
+        }
+        .poster-result .poster-overlay a:hover {
+            background: rgba(255,255,255,0.2);
+            border-color: #fff;
+        }
+        .poster-error {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 200px;
+            padding: 40px;
+            background: var(--canvas-parchment);
+            color: var(--badge-low);
+            font-size: 15px;
+            text-align: center;
+        }
+        .poster-card-appear { animation: fadeIn 0.5s ease-out; }
+
+        /* ── Hide utility ────────────────────────────────────────── */
+        .hidden { display: none !important; }
+
+        /* ── Responsive ──────────────────────────────────────────── */
+        @media (max-width: 833px) {
+            .hero h1 { font-size: 40px; }
+            .hero p { font-size: 17px; }
+            .hero { padding: 48px 24px 32px; }
+            .grid { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+        }
+        @media (max-width: 640px) {
+            .hero h1 { font-size: 34px; }
+            .hero { padding: 40px 16px 24px; }
+            .sub-nav-title { font-size: 17px; }
+            .grid { grid-template-columns: 1fr; gap: 16px; }
+            .poster-grid { grid-template-columns: 1fr; }
+            .progress-section { padding: 48px 16px; }
+            .field-row { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 419px) {
+            .hero h1 { font-size: 28px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ── Sub-nav (frosted) ─────────────────────────────────────────── -->
+<nav class="sub-nav">
+    <div class="sub-nav-inner">
+        <span class="sub-nav-title" id="navTitle"></span>
+        <div class="sub-nav-right">
+            <div class="lang-toggle" id="langToggle">
+                <button data-lang="en" class="active">EN</button>
+                <button data-lang="zh">中文</button>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- ── Hero ───────────────────────────────────────────────────────── -->
+<section class="hero" id="heroSection">
+    <h1 id="appTitle"></h1>
+    <p id="appSubtitle"></p>
+</section>
+
+<!-- ── Phase: Search ─────────────────────────────────────────────── -->
+<div class="panel" id="searchPanel">
+    <label id="lbl_keyword"></label>
+    <input type="text" id="keyword" placeholder="">
+
+    <label id="lbl_category"></label>
+    <input type="text" id="category" placeholder="">
+
+    <div class="field-row">
+        <div>
+            <label id="lbl_maxPins"></label>
+            <input type="number" id="maxPins" value="3" min="1" max="100">
+        </div>
+        <div>
+            <label id="lbl_timeout"></label>
+            <input type="number" id="timeout" value="180" min="30" max="600">
+        </div>
+    </div>
+
+    <button class="btn btn-primary" id="btnSearch"></button>
+</div>
+
+<!-- ── Phase: Progress ───────────────────────────────────────────── -->
+<section class="progress-section hidden" id="progressPanel">
+    <div class="spinner"></div>
+    <p class="progress-text" id="progressText"></p>
+    <div class="progress-bar-wrap hidden" id="progressBarWrap">
+        <div class="progress-bar-fill" id="progressBarFill"></div>
+    </div>
+    <p class="progress-detail hidden" id="progressDetail"></p>
+</section>
+
+<!-- ── Phase: Gallery ────────────────────────────────────────────── -->
+<section class="gallery-section hidden" id="gallerySection">
+    <div class="gallery-toolbar" id="galleryToolbar">
+        <div class="left">
+            <span class="scoring-badge hidden" id="scoringBadge">
+                <span class="dot"></span>
+                <span id="scoringLabel"></span>
+            </span>
+            <span class="count" id="galleryCount"></span>
+        </div>
+        <div>
+            <button class="btn btn-ghost" id="btnSelectAll"></button>
+            <button class="btn btn-ghost" id="btnNewSearch"></button>
+        </div>
+    </div>
+    <div class="grid" id="grid"></div>
+    <div class="bottom-bar" id="bottomBar">
+        <p class="status-text" id="statusText"></p>
+        <div class="generating-status hidden" id="generatingStatus">
+            <span class="spinner"></span>
+            <span id="generatingText"></span>
+        </div>
+        <button class="btn btn-primary" id="btnGenerate" disabled style="max-width:400px;margin:0 auto;"></button>
+    </div>
+</section>
+
+<!-- ── Phase: Poster Generation ───────────────────────────────────── -->
+<section class="poster-page hidden" id="posterPage">
+    <div class="poster-page-header">
+        <div>
+            <h2 id="posterPageTitle"></h2>
+            <p class="subtitle" id="posterPageSubtitle"></p>
+        </div>
+        <button class="btn btn-ghost" id="btnBackToGallery"></button>
+    </div>
+    <div class="poster-grid" id="posterGrid"></div>
+</section>
+
+<!-- ── Footer ────────────────────────────────────────────────────── -->
+<footer class="site-footer" id="siteFooter">
+    <p id="footerText"></p>
+</footer>
+
+<script>
+// ── i18n ────────────────────────────────────────────────────────
+const T = {
+    en: {
+        title: "Pinterest Poster Agent",
+        subtitle: "Discover, curate & generate stunning PromSpark posters",
+        nav_title: "PromSpark",
+        keyword_label: "What product are you looking for?",
+        keyword_ph: "e.g. silk skirts, evening dresses, summer hats\u2026",
+        category_label: "Product Category (optional)",
+        category_ph: "e.g. dresses, skirts \u2014 defaults to keyword",
+        max_pins: "Max Images",
+        timeout: "Timeout (sec)",
+        search_btn: "Search Pinterest",
+        connecting: "Connecting to Pinterest\u2026",
+        extracting: "Loading Pinterest results\u2026",
+        scoring: "Scoring with AI",
+        analyzing: "Analyzing\u2026",
+        score_of: "of",
+        select_all: "Select All",
+        clear_all: "Clear",
+        new_search: "New Search",
+        generate_btn: "Generate Posters",
+        generating: "Generating posters\u2026",
+        generated: "poster(s) generated",
+        view_poster: "View Poster",
+        no_results: "No images found. Try a different search.",
+        selected_count: "selected",
+        select_prompt: "Select images to continue",
+        images_found: "images found",
+        scoring_complete: "Scoring complete",
+        poster_page_title: "Generating Posters",
+        poster_page_subtitle_generating: "Your posters will appear as they\u2019re ready",
+        poster_page_subtitle_done: "All posters generated",
+        poster_generating: "Generating\u2026",
+        poster_open_full: "Open Full Size",
+        poster_error_prefix: "Generation failed",
+        back_to_gallery: "\u2190 Back to Gallery",
+        footer: "Built with PromSpark Poster Agent",
+    },
+    zh: {
+        title: "Pinterest \u6d77\u62a5\u52a9\u624b",
+        subtitle: "\u53d1\u73b0\u3001\u7b5b\u9009\u5e76\u751f\u6210 PromSpark \u7cbe\u7f8e\u6d77\u62a5",
+        nav_title: "PromSpark",
+        keyword_label: "\u60a8\u60f3\u641c\u7d22\u4ec0\u4e48\u4ea7\u54c1\uff1f",
+        keyword_ph: "\u4f8b\u5982\uff1a\u4e1d\u7ef8\u534a\u88d9\u3001\u665a\u793c\u670d\u3001\u590f\u5b63\u5e3d\u5b50\u2026",
+        category_label: "\u4ea7\u54c1\u7c7b\u522b\uff08\u53ef\u9009\uff09",
+        category_ph: "\u4f8b\u5982\uff1a\u8fde\u8863\u88d9\u3001\u534a\u88d9 \u2014 \u9ed8\u8ba4\u4f7f\u7528\u5173\u952e\u8bcd",
+        max_pins: "\u6700\u5927\u56fe\u7247\u6570",
+        timeout: "\u8d85\u65f6\uff08\u79d2\uff09",
+        search_btn: "\u641c\u7d22 Pinterest",
+        connecting: "\u6b63\u5728\u8fde\u63a5 Pinterest\u2026",
+        extracting: "\u6b63\u5728\u52a0\u8f7d Pinterest \u7ed3\u679c\u2026",
+        scoring: "AI \u6b63\u5728\u8bc4\u5206",
+        analyzing: "\u5206\u6790\u4e2d\u2026",
+        score_of: "/",
+        select_all: "\u5168\u9009",
+        clear_all: "\u6e05\u9664",
+        new_search: "\u65b0\u641c\u7d22",
+        generate_btn: "\u751f\u6210\u6d77\u62a5",
+        generating: "\u6b63\u5728\u751f\u6210\u6d77\u62a5\u2026",
+        generated: "\u5f20\u6d77\u62a5\u5df2\u751f\u6210",
+        view_poster: "\u67e5\u770b\u6d77\u62a5",
+        no_results: "\u672a\u627e\u5230\u56fe\u7247\uff0c\u8bf7\u5c1d\u8bd5\u5176\u4ed6\u641c\u7d22\u8bcd\u3002",
+        selected_count: "\u5df2\u9009\u62e9",
+        select_prompt: "\u9009\u62e9\u56fe\u7247\u4ee5\u7ee7\u7eed",
+        images_found: "\u5f20\u56fe\u7247",
+        scoring_complete: "\u8bc4\u5206\u5b8c\u6210",
+        poster_page_title: "\u6b63\u5728\u751f\u6210\u6d77\u62a5",
+        poster_page_subtitle_generating: "\u6d77\u62a5\u5c06\u5728\u5b8c\u6210\u540e\u9010\u4e2a\u663e\u793a",
+        poster_page_subtitle_done: "\u6240\u6709\u6d77\u62a5\u5df2\u751f\u6210",
+        poster_generating: "\u751f\u6210\u4e2d\u2026",
+        poster_open_full: "\u67e5\u770b\u539f\u56fe",
+        poster_error_prefix: "\u751f\u6210\u5931\u8d25",
+        back_to_gallery: "\u2190 \u8fd4\u56de\u76f8\u518c",
+        footer: "\u7531 PromSpark \u6d77\u62a5\u52a9\u624b\u6784\u5efa",
+    }
+};
+
+let lang = localStorage.getItem("pinterest_agent_lang") || "en";
+function t(key) { return T[lang][key] || T.en[key] || key; }
+
+// ── DOM refs ────────────────────────────────────────────────────
+const $  = id => document.getElementById(id);
+const heroSection    = $("heroSection");
+const searchPanel    = $("searchPanel");
+const progressPanel  = $("progressPanel");
+const gallerySection = $("gallerySection");
+const posterPage     = $("posterPage");
+const siteFooter     = $("siteFooter");
+const grid           = $("grid");
+
+let results    = [];
+let selected   = new Set();
+let pollTimer  = null;
+let isScoring  = false;
+
+// ── Apply language ──────────────────────────────────────────────
+function applyLang() {
+    localStorage.setItem("pinterest_agent_lang", lang);
+    document.querySelectorAll(".lang-toggle button").forEach(b => {
+        b.classList.toggle("active", b.dataset.lang === lang);
+    });
+
+    $("navTitle").textContent     = t("nav_title");
+    $("appTitle").textContent     = t("title");
+    $("appSubtitle").textContent  = t("subtitle");
+    $("lbl_keyword").textContent  = t("keyword_label");
+    $("keyword").placeholder      = t("keyword_ph");
+    $("lbl_category").textContent = t("category_label");
+    $("category").placeholder     = t("category_ph");
+    $("lbl_maxPins").textContent  = t("max_pins");
+    $("lbl_timeout").textContent  = t("timeout");
+    $("btnSearch").textContent    = t("search_btn");
+    $("btnSelectAll").textContent = t("select_all");
+    $("btnNewSearch").textContent = t("new_search");
+    $("footerText").textContent   = t("footer");
+    updateGenerateBtn();
+    if (results.length) renderGalleryMeta();
+}
+
+$("langToggle").addEventListener("click", e => {
+    if (e.target.tagName !== "BUTTON") return;
+    lang = e.target.dataset.lang;
+    applyLang();
+});
+
+// ── Phase management ────────────────────────────────────────────
+function showPhase(phase) {
+    heroSection.classList.toggle("hidden", phase !== "search");
+    searchPanel.classList.toggle("hidden", phase !== "search");
+    progressPanel.classList.toggle("hidden", phase !== "progress");
+    gallerySection.classList.toggle("hidden", phase !== "gallery");
+    posterPage.classList.toggle("hidden", phase !== "posters");
+
+    // Footer always visible except during progress
+    siteFooter.classList.toggle("hidden", phase === "progress");
+
+    // Parchment bg for gallery, white for others
+    document.body.style.background = (phase === "gallery" || phase === "posters")
+        ? "var(--canvas-parchment)"
+        : "var(--canvas)";
+}
+
+// ── Helpers ─────────────────────────────────────────────────────
+function badgeClass(score) {
+    if (score >= 7) return "high";
+    if (score >= 4) return "mid";
+    return "low";
+}
+
+function updateGenerateBtn() {
+    const n = selected.size;
+    $("btnGenerate").textContent = n > 0
+        ? `${t("generate_btn")} (${n})`
+        : t("generate_btn");
+    $("btnGenerate").disabled = n === 0;
+}
+
+function renderGalleryMeta() {
+    const scored = results.filter(r => r.score !== null).length;
+    const total  = results.length;
+
+    if (scored < total && isScoring) {
+        $("scoringBadge").classList.remove("hidden");
+        $("scoringLabel").textContent = `${t("scoring")} (${scored}/${total})`;
+    } else {
+        $("scoringBadge").classList.add("hidden");
+    }
+
+    $("galleryCount").textContent = `${total} ${t("images_found")}`;
+    const sel = selected.size;
+    $("statusText").textContent = sel > 0
+        ? `${sel} ${t("selected_count")}`
+        : t("select_prompt");
+}
+
+// ── Render grid ─────────────────────────────────────────────────
+function renderGrid() {
+    grid.innerHTML = "";
+    results.forEach(item => {
+        const card = document.createElement("div");
+        card.className = "card" + (selected.has(item.id) ? " selected" : "");
+
+        const isLoading = item.score === null;
+        let bodyHTML;
+        if (isLoading) {
+            bodyHTML = `
+                <div class="score-loading">
+                    <div class="shimmer-bar"></div>
+                    <span class="shimmer-text">${t("analyzing")}</span>
+                </div>`;
+        } else {
+            bodyHTML = `
+                <span class="badge ${badgeClass(item.score)} score-appear">${item.score}/10</span>
+                <p class="reason">${item.reason}</p>
+                ${item.poster_path ? `<a class="poster-link" href="/${item.poster_path}" target="_blank">${t("view_poster")}</a>` : ""}`;
+        }
+
+        card.innerHTML = `
+            <img src="${item.thumbnail_url}" alt="Pin ${item.id}" loading="lazy">
+            <div class="card-body">${bodyHTML}</div>`;
+
+        card.addEventListener("click", e => {
+            if (e.target.closest(".poster-link")) return;
+            if (selected.has(item.id)) {
+                selected.delete(item.id);
+            } else {
+                selected.add(item.id);
+            }
+            renderGrid();
+            updateGenerateBtn();
+            renderGalleryMeta();
+        });
+        grid.appendChild(card);
+    });
+}
+
+// ── Search flow ─────────────────────────────────────────────────
+$("btnSearch").addEventListener("click", async () => {
+    const keyword = $("keyword").value.trim();
+    if (!keyword) { alert(t("keyword_label")); return; }
+
+    $("btnSearch").disabled = true;
+    showPhase("progress");
+    $("progressText").textContent = t("connecting");
+    $("progressBarWrap").classList.add("hidden");
+    $("progressDetail").classList.add("hidden");
+
+    try {
+        const res = await fetch("/api/search", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                keyword,
+                category: $("category").value.trim() || "",
+                max_pins: parseInt($("maxPins").value) || 3,
+                session_timeout_s: parseInt($("timeout").value) || 180,
+            }),
+        });
+
+        if (!res.ok) {
+            const err = await res.json();
+            alert(err.error || "Search failed");
+            showPhase("search");
+            $("btnSearch").disabled = false;
+            return;
+        }
+
+        isScoring = true;
+        pollTimer = setInterval(pollStatus, 1500);
+    } catch (e) {
+        alert("Network error: " + e.message);
+        showPhase("search");
+        $("btnSearch").disabled = false;
+    }
+});
+
+async function pollStatus() {
+    try {
+        const data = await fetch("/api/search/status").then(r => r.json());
+        const msg = data.progress || "";
+
+        if (data.images_ready) {
+            await refreshResults();
+            if (gallerySection.classList.contains("hidden")) {
+                showPhase("gallery");
+            }
+        }
+
+        if (progressPanel && !progressPanel.classList.contains("hidden")) {
+            const scoringMatch = msg.match(/Scoring pin (\d+) of (\d+)/);
+            const scoredMatch  = msg.match(/Scored pin (\d+) of (\d+): (\d+)\/10/);
+
+            if (scoredMatch || scoringMatch) {
+                const m = scoredMatch || scoringMatch;
+                const cur = parseInt(m[1]);
+                const tot = parseInt(m[2]);
+                const pct = Math.round((cur / tot) * 100);
+                $("progressText").textContent = `${t("scoring")} (${cur}/${tot})`;
+                $("progressBarFill").style.width = pct + "%";
+                $("progressBarWrap").classList.remove("hidden");
+                $("progressDetail").classList.remove("hidden");
+                $("progressDetail").textContent = scoredMatch
+                    ? `Pin ${cur}: ${scoredMatch[3]}/10`
+                    : `Pin ${cur}\u2026`;
+            } else if (msg.includes("Connecting")) {
+                $("progressText").textContent = t("connecting");
+            } else if (msg.includes("extracting") || msg.includes("Loading") || msg.includes("Found")) {
+                $("progressText").textContent = t("extracting");
+            } else if (msg.includes("Extracted") || msg.includes("images_extracted")) {
+                $("progressText").textContent = t("extracting");
+            } else {
+                $("progressText").textContent = msg || t("connecting");
+            }
+        }
+
+        if (!gallerySection.classList.contains("hidden")) {
+            renderGalleryMeta();
+        }
+
+        if (data.status === "done") {
+            clearInterval(pollTimer);
+            pollTimer = null;
+            isScoring = false;
+            await refreshResults();
+            if (gallerySection.classList.contains("hidden")) {
+                showPhase("gallery");
+            }
+            renderGalleryMeta();
+            $("btnSearch").disabled = false;
+        } else if (data.status === "error") {
+            clearInterval(pollTimer);
+            pollTimer = null;
+            isScoring = false;
+            alert(data.error || "Search failed");
+            showPhase("search");
+            $("btnSearch").disabled = false;
+        }
+    } catch (e) {
+        // Network hiccup — keep polling
+    }
+}
+
+async function refreshResults() {
+    try {
+        const res = await fetch("/api/results");
+        const newResults = await res.json();
+
+        if (newResults.length === 0) return;
+
+        results = newResults;
+        renderGrid();
+        updateGenerateBtn();
+    } catch (e) {
+        // Ignore transient errors
+    }
+}
+
+// ── Select All ──────────────────────────────────────────────────
+$("btnSelectAll").addEventListener("click", () => {
+    if (selected.size > 0) {
+        selected.clear();
+        $("btnSelectAll").textContent = t("select_all");
+    } else {
+        results.forEach(r => selected.add(r.id));
+        $("btnSelectAll").textContent = t("clear_all");
+    }
+    renderGrid();
+    updateGenerateBtn();
+    renderGalleryMeta();
+});
+
+// ── New Search ──────────────────────────────────────────────────
+$("btnNewSearch").addEventListener("click", () => {
+    results = [];
+    selected.clear();
+    isScoring = false;
+    if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+    showPhase("search");
+    $("btnSearch").disabled = false;
+});
+
+// ── Generate Posters — navigate to poster page ─────────────────
+let posterGenCount = 0;
+let posterDoneCount = 0;
+
+$("btnGenerate").addEventListener("click", () => {
+    if (selected.size === 0) return;
+
+    // Gather selected items with their data
+    const selectedItems = results.filter(r => selected.has(r.id));
+    if (selectedItems.length === 0) return;
+
+    posterGenCount = selectedItems.length;
+    posterDoneCount = 0;
+
+    // Switch to poster page
+    showPhase("posters");
+    $("posterPageTitle").textContent = t("poster_page_title");
+    $("posterPageSubtitle").textContent = t("poster_page_subtitle_generating");
+    $("btnBackToGallery").textContent = t("back_to_gallery");
+
+    // Render placeholder cards with original thumbnails
+    const posterGrid = $("posterGrid");
+    posterGrid.innerHTML = "";
+    selectedItems.forEach(item => {
+        const card = document.createElement("div");
+        card.className = "poster-card";
+        card.id = `poster-card-${item.id}`;
+        card.innerHTML = `
+            <div class="poster-placeholder">
+                <img class="source-thumb" src="${item.thumbnail_url}" alt="Source">
+                <div class="spinner-lg"></div>
+                <span class="gen-text">${t("poster_generating")}</span>
+            </div>`;
+        posterGrid.appendChild(card);
+    });
+
+    // Fire all generation requests concurrently
+    selectedItems.forEach(item => {
+        generateOnePoster(item);
+    });
+});
+
+async function generateOnePoster(item) {
+    const card = $(`poster-card-${item.id}`);
+    try {
+        const res = await fetch("/api/generate-one", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ pin_id: item.id }),
+        });
+        const data = await res.json();
+
+        if (!res.ok || data.error) {
+            card.classList.add("error");
+            card.innerHTML = `
+                <div class="poster-error">
+                    <p>${t("poster_error_prefix")}: ${data.error || data.detail || "Unknown error"}</p>
+                </div>
+                <div style="padding:12px 16px;border-top:1px solid var(--hairline);display:flex;align-items:center;gap:12px;">
+                    <img src="${item.thumbnail_url}" style="width:48px;height:48px;border-radius:8px;object-fit:cover;">
+                    <span style="font-size:13px;color:var(--body-muted);">Pin #${item.id}</span>
+                </div>`;
+        } else {
+            card.classList.add("done", "poster-card-appear");
+            const posterUrl = `/${data.poster_path}?t=${Date.now()}`;
+            card.innerHTML = `
+                <div class="poster-result">
+                    <img src="${posterUrl}" alt="Generated poster">
+                    <div class="poster-overlay">
+                        <a href="${posterUrl}" target="_blank">${t("poster_open_full")}</a>
+                    </div>
+                </div>
+                <div style="padding:12px 16px;border-top:1px solid var(--hairline);display:flex;align-items:center;gap:12px;">
+                    <img src="${item.thumbnail_url}" style="width:48px;height:48px;border-radius:8px;object-fit:cover;">
+                    <div style="flex:1;min-width:0;">
+                        <span style="font-size:13px;color:var(--ink);font-weight:500;">Original Source</span>
+                        <a href="${item.pin_url || '#'}" target="_blank" style="display:block;font-size:12px;color:var(--primary);text-decoration:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">View on Pinterest</a>
+                    </div>
+                </div>`;
+
+            // Update the results data so gallery also shows poster link
+            const resultItem = results.find(r => r.id === item.id);
+            if (resultItem) resultItem.poster_path = data.poster_path;
+        }
+    } catch (e) {
+        card.classList.add("error");
+        card.innerHTML = `
+            <div class="poster-error">
+                <p>${t("poster_error_prefix")}: ${e.message}</p>
+            </div>`;
+    }
+
+    posterDoneCount++;
+    if (posterDoneCount >= posterGenCount) {
+        $("posterPageTitle").textContent = t("poster_page_subtitle_done");
+        $("posterPageSubtitle").textContent = `${posterDoneCount} poster(s)`;
+        // Refresh gallery data
+        await refreshResults();
+    }
+}
+
+// ── Back to Gallery ─────────────────────────────────────────────
+$("btnBackToGallery").addEventListener("click", () => {
+    selected.clear();
+    showPhase("gallery");
+    updateGenerateBtn();
+    renderGalleryMeta();
+    renderGrid();
+});
+
+// ── Init ────────────────────────────────────────────────────────
+showPhase("search");
+applyLang();
+</script>
+</body>
+</html>
