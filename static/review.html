@@ -461,24 +461,6 @@
             margin-bottom: 16px;
         }
 
-        /* ── Config panel (Step 2) ───────────────────────────────── */
-        .config-section {
-            background: var(--canvas);
-            padding: 80px 24px;
-        }
-        .config-header {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 32px;
-        }
-        .config-header h2 {
-            font-size: 28px;
-            font-weight: 600;
-            line-height: 1.14;
-            letter-spacing: -0.224px;
-        }
-
         /* ── Generating overlay ───────────────────────────────────── */
         .generating-status {
             text-align: center;
@@ -618,41 +600,11 @@
     <div class="grid" id="grid"></div>
     <div class="bottom-bar" id="bottomBar">
         <p class="status-text" id="statusText"></p>
-        <button class="btn btn-primary" id="btnNext" disabled style="max-width:400px;margin:0 auto;"></button>
-    </div>
-</section>
-
-<!-- ── Phase: Config ─────────────────────────────────────────────── -->
-<section class="config-section hidden" id="configPanel">
-    <div class="panel" style="margin-bottom:0;">
-        <div class="config-header">
-            <button class="btn btn-ghost" id="btnBack">&#8592;</button>
-            <h2 id="configTitle"></h2>
-        </div>
-
-        <label id="lbl_productName"></label>
-        <input type="text" id="productName" placeholder="">
-
-        <div class="field-row">
-            <div>
-                <label id="lbl_price"></label>
-                <input type="text" id="price" placeholder="">
-            </div>
-            <div>
-                <label id="lbl_tagline"></label>
-                <input type="text" id="tagline" placeholder="">
-            </div>
-        </div>
-
-        <label id="lbl_logoUrl"></label>
-        <input type="text" id="logoUrl" placeholder="">
-
         <div class="generating-status hidden" id="generatingStatus">
             <span class="spinner"></span>
             <span id="generatingText"></span>
         </div>
-
-        <button class="btn btn-primary" id="btnGenerate" style="margin-top: 8px;"></button>
+        <button class="btn btn-primary" id="btnGenerate" disabled style="max-width:400px;margin:0 auto;"></button>
     </div>
 </section>
 
@@ -666,8 +618,8 @@
 const T = {
     en: {
         title: "Pinterest Poster Agent",
-        subtitle: "Discover, curate & generate stunning product posters",
-        nav_title: "Poster Agent",
+        subtitle: "Discover, curate & generate stunning PromSpark posters",
+        nav_title: "PromSpark",
         keyword_label: "What product are you looking for?",
         keyword_ph: "e.g. silk skirts, evening dresses, summer hats\u2026",
         category_label: "Product Category (optional)",
@@ -683,17 +635,6 @@ const T = {
         select_all: "Select All",
         clear_all: "Clear",
         new_search: "New Search",
-        next_btn: "Next \u2192",
-        back_btn: "\u2190 Back",
-        config_title: "Product Details",
-        product_name: "Product Name",
-        product_name_ph: "e.g. Silk Evening Dress",
-        price: "Price",
-        price_ph: "e.g. $129.99",
-        tagline: "Tagline",
-        tagline_ph: "e.g. Elegance Redefined",
-        logo_url: "Logo URL (optional)",
-        logo_url_ph: "https://\u2026",
         generate_btn: "Generate Posters",
         generating: "Generating posters\u2026",
         generated: "poster(s) generated",
@@ -703,12 +644,12 @@ const T = {
         select_prompt: "Select images to continue",
         images_found: "images found",
         scoring_complete: "Scoring complete",
-        footer: "Built with Pinterest Poster Agent",
+        footer: "Built with PromSpark Poster Agent",
     },
     zh: {
         title: "Pinterest \u6d77\u62a5\u52a9\u624b",
-        subtitle: "\u53d1\u73b0\u3001\u7b5b\u9009\u5e76\u751f\u6210\u7cbe\u7f8e\u4ea7\u54c1\u6d77\u62a5",
-        nav_title: "\u6d77\u62a5\u52a9\u624b",
+        subtitle: "\u53d1\u73b0\u3001\u7b5b\u9009\u5e76\u751f\u6210 PromSpark \u7cbe\u7f8e\u6d77\u62a5",
+        nav_title: "PromSpark",
         keyword_label: "\u60a8\u60f3\u641c\u7d22\u4ec0\u4e48\u4ea7\u54c1\uff1f",
         keyword_ph: "\u4f8b\u5982\uff1a\u4e1d\u7ef8\u534a\u88d9\u3001\u665a\u793c\u670d\u3001\u590f\u5b63\u5e3d\u5b50\u2026",
         category_label: "\u4ea7\u54c1\u7c7b\u522b\uff08\u53ef\u9009\uff09",
@@ -724,17 +665,6 @@ const T = {
         select_all: "\u5168\u9009",
         clear_all: "\u6e05\u9664",
         new_search: "\u65b0\u641c\u7d22",
-        next_btn: "\u4e0b\u4e00\u6b65 \u2192",
-        back_btn: "\u2190 \u8fd4\u56de",
-        config_title: "\u4ea7\u54c1\u4fe1\u606f",
-        product_name: "\u4ea7\u54c1\u540d\u79f0",
-        product_name_ph: "\u4f8b\u5982\uff1a\u4e1d\u7ef8\u665a\u793c\u670d",
-        price: "\u4ef7\u683c",
-        price_ph: "\u4f8b\u5982\uff1a\u00a5699",
-        tagline: "\u5ba3\u4f20\u8bed",
-        tagline_ph: "\u4f8b\u5982\uff1a\u4f18\u96c5\u91cd\u65b0\u5b9a\u4e49",
-        logo_url: "Logo \u94fe\u63a5\uff08\u53ef\u9009\uff09",
-        logo_url_ph: "https://\u2026",
         generate_btn: "\u751f\u6210\u6d77\u62a5",
         generating: "\u6b63\u5728\u751f\u6210\u6d77\u62a5\u2026",
         generated: "\u5f20\u6d77\u62a5\u5df2\u751f\u6210",
@@ -744,7 +674,7 @@ const T = {
         select_prompt: "\u9009\u62e9\u56fe\u7247\u4ee5\u7ee7\u7eed",
         images_found: "\u5f20\u56fe\u7247",
         scoring_complete: "\u8bc4\u5206\u5b8c\u6210",
-        footer: "\u7531 Pinterest \u6d77\u62a5\u52a9\u624b\u6784\u5efa",
+        footer: "\u7531 PromSpark \u6d77\u62a5\u52a9\u624b\u6784\u5efa",
     }
 };
 
@@ -757,7 +687,6 @@ const heroSection    = $("heroSection");
 const searchPanel    = $("searchPanel");
 const progressPanel  = $("progressPanel");
 const gallerySection = $("gallerySection");
-const configPanel    = $("configPanel");
 const siteFooter     = $("siteFooter");
 const grid           = $("grid");
 
@@ -785,20 +714,8 @@ function applyLang() {
     $("btnSearch").textContent    = t("search_btn");
     $("btnSelectAll").textContent = t("select_all");
     $("btnNewSearch").textContent = t("new_search");
-    $("btnNext").textContent      = t("next_btn");
-    $("btnBack").textContent      = t("back_btn");
-    $("configTitle").textContent  = t("config_title");
-    $("lbl_productName").textContent = t("product_name");
-    $("productName").placeholder  = t("product_name_ph");
-    $("lbl_price").textContent    = t("price");
-    $("price").placeholder        = t("price_ph");
-    $("lbl_tagline").textContent  = t("tagline");
-    $("tagline").placeholder      = t("tagline_ph");
-    $("lbl_logoUrl").textContent  = t("logo_url");
-    $("logoUrl").placeholder      = t("logo_url_ph");
     $("footerText").textContent   = t("footer");
     updateGenerateBtn();
-    updateNextBtn();
     if (results.length) renderGalleryMeta();
 }
 
@@ -814,7 +731,6 @@ function showPhase(phase) {
     searchPanel.classList.toggle("hidden", phase !== "search");
     progressPanel.classList.toggle("hidden", phase !== "progress");
     gallerySection.classList.toggle("hidden", phase !== "gallery");
-    configPanel.classList.toggle("hidden", phase !== "config");
 
     // Footer always visible except during progress
     siteFooter.classList.toggle("hidden", phase === "progress");
@@ -832,17 +748,11 @@ function badgeClass(score) {
     return "low";
 }
 
-function updateNextBtn() {
-    const n = selected.size;
-    $("btnNext").disabled = n === 0;
-    $("btnNext").textContent = n > 0
-        ? `${t("next_btn")} (${n})`
-        : t("next_btn");
-}
-
 function updateGenerateBtn() {
     const n = selected.size;
-    $("btnGenerate").textContent = `${t("generate_btn")} (${n})`;
+    $("btnGenerate").textContent = n > 0
+        ? `${t("generate_btn")} (${n})`
+        : t("generate_btn");
     $("btnGenerate").disabled = n === 0;
 }
 
@@ -898,7 +808,7 @@ function renderGrid() {
                 selected.add(item.id);
             }
             renderGrid();
-            updateNextBtn();
+            updateGenerateBtn();
             renderGalleryMeta();
         });
         grid.appendChild(card);
@@ -1020,7 +930,7 @@ async function refreshResults() {
 
         results = newResults;
         renderGrid();
-        updateNextBtn();
+        updateGenerateBtn();
     } catch (e) {
         // Ignore transient errors
     }
@@ -1036,7 +946,7 @@ $("btnSelectAll").addEventListener("click", () => {
         $("btnSelectAll").textContent = t("clear_all");
     }
     renderGrid();
-    updateNextBtn();
+    updateGenerateBtn();
     renderGalleryMeta();
 });
 
@@ -1050,21 +960,7 @@ $("btnNewSearch").addEventListener("click", () => {
     $("btnSearch").disabled = false;
 });
 
-// ── Next → Config ───────────────────────────────────────────────
-$("btnNext").addEventListener("click", () => {
-    if (selected.size === 0) return;
-    showPhase("config");
-    updateGenerateBtn();
-    $("generatingStatus").classList.add("hidden");
-    $("btnGenerate").disabled = false;
-});
-
-// ── Back ← Gallery ──────────────────────────────────────────────
-$("btnBack").addEventListener("click", () => {
-    showPhase("gallery");
-});
-
-// ── Generate Posters ────────────────────────────────────────────
+// ── Generate Posters (direct from gallery) ──────────────────────
 $("btnGenerate").addEventListener("click", async () => {
     if (selected.size === 0) return;
     $("btnGenerate").disabled = true;
@@ -1077,10 +973,6 @@ $("btnGenerate").addEventListener("click", async () => {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 selected_ids: [...selected],
-                product_name: $("productName").value || "Product",
-                price: $("price").value || "",
-                tagline: $("tagline").value || "",
-                logo_url: $("logoUrl").value || "",
             }),
         });
         const data = await res.json();
@@ -1090,9 +982,10 @@ $("btnGenerate").addEventListener("click", async () => {
         await refreshResults();
 
         setTimeout(() => {
-            showPhase("gallery");
+            $("generatingStatus").classList.add("hidden");
+            updateGenerateBtn();
             renderGalleryMeta();
-        }, 1500);
+        }, 2000);
     } catch (e) {
         $("generatingText").textContent = "Error: " + e.message;
     } finally {

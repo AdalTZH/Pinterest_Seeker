@@ -55,10 +55,6 @@ class SearchRequest(BaseModel):
 
 class GenerateRequest(BaseModel):
     selected_ids: list[int]
-    product_name: str = "Product"
-    price: str = ""
-    tagline: str = ""
-    logo_url: str = ""
 
 
 # ── Background scoring task ──────────────────────────────────────────
@@ -170,9 +166,6 @@ async def generate(req: GenerateRequest):
             poster_filename = f"poster_{item['id']}.png"
             poster_path = await generate_poster(
                 image_url=full_res,
-                product_name=req.product_name,
-                price=req.price,
-                tagline=req.tagline,
                 output_filename=poster_filename,
             )
             item["poster_path"] = poster_path
