@@ -4,28 +4,32 @@ A fully autonomous AI agent + human-in-the-loop review system that browses Pinte
 
 ## How It Works
 
-1. **Phase 1 — Scoring**: User inputs a product category (e.g. "evening dresses"). The AI agent browses Pinterest autonomously — scrolls, screenshots each pin thumbnail, and scores them with gpt-5.4-mini. Results saved to `data/scored_results.json`.
-
-2. **Phase 2 — Review UI**: User opens a local FastAPI web page, sees an image grid with AI scores and reasons, selects the images they want, configures product details, and clicks "Generate".
-
-3. **Phase 3 — Poster Generation**: The agent re-visits each selected pin, extracts the full-res image URL, sends it to nanoBanana Pro, and saves posters to `output/posters/`.
+1. **Search**: User opens the web UI and types what product they're looking for (e.g. "evening dresses", "silk skirts").
+2. **Agent Browsing**: The AI agent autonomously browses Pinterest — scrolls the feed, screenshots each pin thumbnail, and scores them with gpt-5.4-mini. Progress is shown in real-time.
+3. **Review**: Once scoring is done, a grid of scored images appears. User reviews the AI scores and reasons, selects the images they like.
+4. **Poster Generation**: User fills in product details (name, price, tagline) and clicks "Generate". The agent extracts full-res images and generates posters via nanoBanana Pro.
 
 ## Architecture
 
 ```
-User Input: "evening dresses"
+┌──────────────────────────────────────────────┐
+│  WEB UI — User types product keyword         │
+│  "evening dresses" → clicks Search Pinterest │
+└──────────────────────────────────────────────┘
         ↓
 ┌──────────────────────────────────────────────┐
 │  PHASE 1 — Agent Scoring (automated)         │
 │  Playwright → Pinterest → Scroll → Score     │
 │  Guardrails: pin cap, scroll cap, timeout,   │
 │  error circuit breaker, stale detector        │
+│  UI shows real-time progress                 │
 └──────────────────────────────────────────────┘
         ↓
 ┌──────────────────────────────────────────────┐
-│  PHASE 2 — Human Review UI                   │
-│  FastAPI serves grid of scored thumbnails    │
-│  User selects images → "Generate Posters"    │
+│  PHASE 2 — Human Review                      │
+│  Scored image grid appears                   │
+│  User selects images → fills product info    │
+│  → clicks "Generate Posters"                 │
 └──────────────────────────────────────────────┘
         ↓
 ┌──────────────────────────────────────────────┐
@@ -52,12 +56,14 @@ cp .env.example .env
 ## Usage
 
 ```bash
-# Run the full pipeline
+# Start the server
 python main.py
 
-# Or run the review UI standalone (after Phase 1 has produced scored_results.json)
+# Or with uvicorn directly
 uvicorn server:app --host 0.0.0.0 --port 8000
 ```
+
+Then open http://localhost:8000 — type a product keyword and the agent will handle the rest.
 
 ## Guardrails
 
@@ -69,14 +75,14 @@ uvicorn server:app --host 0.0.0.0 --port 8000
 | `max_error_streak` | 5 | Looping when Pinterest layout changes |
 | `max_stale_scrolls` | 2 | Scrolling past the end of the feed |
 
-All five are evaluated on every iteration via a single `guard.should_stop` check.
+All five are evaluated on every iteration via a single `guard.should_stop` check. Configurable from the search panel UI.
 
 ## Project Structure
 
 ```
 pinterest-poster-agent/
-├── main.py                  # Entry point
-├── server.py                # FastAPI review UI + generate endpoint
+├── main.py                  # Entry point — launches FastAPI server
+├── server.py                # FastAPI: search, scoring, review, generate
 ├── agent/
 │   ├── browser_agent.py     # Browser setup
 │   ├── scorer.py            # Phase 1 scoring pipeline
@@ -88,7 +94,7 @@ pinterest-poster-agent/
 ├── db/
 │   └── tracker.py           # SQLite dedup tracker
 ├── static/
-│   └── review.html          # Review UI
+│   └── review.html          # Single-page UI (search → review → generate)
 ├── data/                    # Scored results
 └── output/posters/          # Generated posters
 ```

@@ -1,7 +1,17 @@
-"""FastAPI app — Phase 2 review UI and Phase 3 generate endpoint."""
+"""FastAPI app — drives the full pipeline from the browser UI.
+
+Flow:
+  1. User opens /, sees a search form
+  2. User types a product keyword → POST /api/search
+  3. Server runs Phase 1 scoring in a background task
+  4. UI polls GET /api/search/status for progress
+  5. Once done, UI loads scored results via GET /api/results
+  6. User selects images → POST /api/generate triggers Phase 3
+"""
 
 from __future__ import annotations
 
+import asyncio
 import json
 from pathlib import Path
 
@@ -11,16 +21,36 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from agent.fullres_fetcher import fetch_full_res_url
+from agent.scorer import run_scoring_phase
 from poster.nano_banana import generate_poster
 
-app = FastAPI(title="Pinterest Poster Agent — Review UI")
+app = FastAPI(title="Pinterest Poster Agent")
 
 DATA_FILE = Path("data/scored_results.json")
 
 app.mount("/output", StaticFiles(directory="output"), name="output")
 
 
+# ── In-memory search state ───────────────────────────────────────────
+
+_search_state: dict = {
+    "status": "idle",       # idle | searching | done | error
+    "keyword": "",
+    "category": "",
+    "progress": "",
+    "error": None,
+}
+
+
 # ── Models ───────────────────────────────────────────────────────────
+
+
+class SearchRequest(BaseModel):
+    keyword: str
+    category: str = ""
+    max_pins: int = 40
+    max_scrolls: int = 8
+    session_timeout_s: int = 180
 
 
 class GenerateRequest(BaseModel):
@@ -31,6 +61,34 @@ class GenerateRequest(BaseModel):
     logo_url: str = ""
 
 
+# ── Background scoring task ──────────────────────────────────────────
+
+
+async def _run_search(req: SearchRequest) -> None:
+    """Run Phase 1 scoring in the background, updating _search_state."""
+    global _search_state
+    _search_state["status"] = "searching"
+    _search_state["keyword"] = req.keyword
+    _search_state["category"] = req.category or req.keyword
+    _search_state["progress"] = "Starting Pinterest search..."
+    _search_state["error"] = None
+
+    try:
+        results = await run_scoring_phase(
+            keyword=req.keyword,
+            category=req.category or req.keyword,
+            max_pins=req.max_pins,
+            max_scrolls=req.max_scrolls,
+            session_timeout_s=req.session_timeout_s,
+        )
+        _search_state["status"] = "done"
+        _search_state["progress"] = f"Scored {len(results)} pins"
+    except Exception as e:
+        _search_state["status"] = "error"
+        _search_state["error"] = str(e)
+        _search_state["progress"] = f"Error: {e}"
+
+
 # ── Routes ───────────────────────────────────────────────────────────
 
 
@@ -39,6 +97,34 @@ async def index():
     """Serve the review UI."""
     html_path = Path("static/review.html")
     return HTMLResponse(content=html_path.read_text(encoding="utf-8"))
+
+
+@app.post("/api/search")
+async def search(req: SearchRequest):
+    """Start Phase 1 — browse Pinterest and score images."""
+    if _search_state["status"] == "searching":
+        return JSONResponse(
+            content={"error": "A search is already in progress"},
+            status_code=409,
+        )
+
+    # Clear previous results
+    if DATA_FILE.exists():
+        DATA_FILE.unlink()
+
+    asyncio.create_task(_run_search(req))
+    return {"status": "searching", "keyword": req.keyword}
+
+
+@app.get("/api/search/status")
+async def search_status():
+    """Poll for search progress."""
+    return {
+        "status": _search_state["status"],
+        "keyword": _search_state["keyword"],
+        "progress": _search_state["progress"],
+        "error": _search_state["error"],
+    }
 
 
 @app.get("/api/results")

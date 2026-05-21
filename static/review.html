@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pinterest Poster Agent — Review</title>
+    <title>Pinterest Poster Agent</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -23,17 +23,94 @@
             margin-bottom: 24px;
         }
 
-        /* Config panel */
+        /* ── Search panel ─────────────────────────────────────── */
+        .search-panel {
+            max-width: 600px;
+            margin: 0 auto 24px;
+            background: #fff;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .search-panel label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 4px;
+        }
+        .search-panel input, .search-panel select {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            margin-bottom: 12px;
+        }
+        .search-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 12px;
+        }
+        #btnSearch {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            background: #e60023;
+            color: #fff;
+            margin-top: 4px;
+            transition: transform 0.1s;
+        }
+        #btnSearch:active { transform: scale(0.97); }
+        #btnSearch:disabled { background: #ccc; cursor: not-allowed; }
+
+        /* ── Progress bar ─────────────────────────────────────── */
+        .progress-panel {
+            display: none;
+            max-width: 600px;
+            margin: 0 auto 24px;
+            background: #fff;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            text-align: center;
+        }
+        .progress-panel.active { display: block; }
+        .progress-panel .spinner {
+            display: inline-block;
+            width: 32px;
+            height: 32px;
+            border: 3px solid #ddd;
+            border-top-color: #e60023;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-bottom: 12px;
+        }
+        .progress-panel .progress-text {
+            color: #555;
+            font-size: 0.95rem;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ── Config panel (shown after results) ───────────────── */
         .config-panel {
+            display: none;
             max-width: 700px;
             margin: 0 auto 24px;
             background: #fff;
             border-radius: 12px;
             padding: 20px;
-            display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 12px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .config-panel.active {
+            display: grid;
         }
         .config-panel label {
             font-size: 0.85rem;
@@ -48,11 +125,13 @@
             font-size: 0.95rem;
         }
 
-        /* Actions bar */
+        /* ── Actions bar ──────────────────────────────────────── */
         .actions {
+            display: none;
             text-align: center;
             margin-bottom: 24px;
         }
+        .actions.active { display: block; }
         .actions button {
             padding: 12px 32px;
             font-size: 1rem;
@@ -76,8 +155,12 @@
             background: #eee;
             color: #333;
         }
+        #btnNewSearch {
+            background: #eee;
+            color: #333;
+        }
 
-        /* Grid */
+        /* ── Grid ─────────────────────────────────────────────── */
         .grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
@@ -131,7 +214,7 @@
 
         /* Checkmark overlay */
         .card.selected::after {
-            content: "✓";
+            content: "\2713";
             position: absolute;
             top: 10px;
             right: 10px;
@@ -154,32 +237,46 @@
             color: #888;
             font-size: 0.9rem;
         }
-
-        /* Loading spinner */
-        .spinner {
-            display: none;
-            text-align: center;
-            margin: 24px 0;
-        }
-        .spinner.active { display: block; }
-        .spinner::after {
-            content: "";
-            display: inline-block;
-            width: 32px;
-            height: 32px;
-            border: 3px solid #ddd;
-            border-top-color: #e60023;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
     <h1>Pinterest Poster Agent</h1>
-    <p class="subtitle">Select images to generate e-commerce posters</p>
+    <p class="subtitle">Search for products on Pinterest, review scored images, and generate posters</p>
 
-    <div class="config-panel">
+    <!-- ── STEP 1: Search ──────────────────────────────────── -->
+    <div class="search-panel" id="searchPanel">
+        <label for="keyword">What product are you looking for?</label>
+        <input type="text" id="keyword" placeholder="e.g. evening dresses, silk skirts, summer hats...">
+
+        <label for="category">Product category (optional)</label>
+        <input type="text" id="category" placeholder="e.g. dresses, skirts — defaults to keyword">
+
+        <div class="search-row">
+            <div>
+                <label for="maxPins">Max pins</label>
+                <input type="number" id="maxPins" value="40" min="1" max="100">
+            </div>
+            <div>
+                <label for="maxScrolls">Max scrolls</label>
+                <input type="number" id="maxScrolls" value="8" min="1" max="50">
+            </div>
+            <div>
+                <label for="timeout">Timeout (sec)</label>
+                <input type="number" id="timeout" value="180" min="30" max="600">
+            </div>
+        </div>
+
+        <button id="btnSearch">Search Pinterest</button>
+    </div>
+
+    <!-- ── STEP 2: Progress ────────────────────────────────── -->
+    <div class="progress-panel" id="progressPanel">
+        <div class="spinner"></div>
+        <p class="progress-text" id="progressText">Starting search...</p>
+    </div>
+
+    <!-- ── STEP 3: Results ─────────────────────────────────── -->
+    <div class="config-panel" id="configPanel">
         <div>
             <label>Product Name</label>
             <input type="text" id="productName" placeholder="e.g. Silk Evening Dress">
@@ -198,25 +295,34 @@
         </div>
     </div>
 
-    <div class="actions">
+    <div class="actions" id="actionsBar">
+        <button id="btnNewSearch">New Search</button>
         <button id="btnSelectAll">Select All Approved</button>
         <button id="btnGenerate" disabled>Generate Posters (0)</button>
     </div>
 
-    <div class="spinner" id="spinner"></div>
     <div class="grid" id="grid"></div>
-    <p class="status" id="status">Loading results...</p>
+    <p class="status" id="status"></p>
 
     <script>
-        const grid = document.getElementById("grid");
-        const status = document.getElementById("status");
-        const spinner = document.getElementById("spinner");
-        const btnGenerate = document.getElementById("btnGenerate");
-        const btnSelectAll = document.getElementById("btnSelectAll");
+        // ── DOM refs ──────────────────────────────────────────
+        const searchPanel   = document.getElementById("searchPanel");
+        const progressPanel = document.getElementById("progressPanel");
+        const progressText  = document.getElementById("progressText");
+        const configPanel   = document.getElementById("configPanel");
+        const actionsBar    = document.getElementById("actionsBar");
+        const grid          = document.getElementById("grid");
+        const status        = document.getElementById("status");
+        const btnSearch     = document.getElementById("btnSearch");
+        const btnGenerate   = document.getElementById("btnGenerate");
+        const btnSelectAll  = document.getElementById("btnSelectAll");
+        const btnNewSearch  = document.getElementById("btnNewSearch");
 
         let results = [];
         let selected = new Set();
+        let pollTimer = null;
 
+        // ── Helpers ───────────────────────────────────────────
         function badgeClass(score) {
             if (score >= 7) return "high";
             if (score >= 4) return "mid";
@@ -229,6 +335,18 @@
             btnGenerate.disabled = n === 0;
         }
 
+        function showPhase(phase) {
+            searchPanel.style.display   = phase === "search"   ? "block" : "none";
+            progressPanel.className     = phase === "progress"  ? "progress-panel active" : "progress-panel";
+            configPanel.className       = phase === "results"   ? "config-panel active" : "config-panel";
+            actionsBar.className        = phase === "results"   ? "actions active" : "actions";
+            if (phase !== "results") {
+                grid.innerHTML = "";
+                status.textContent = "";
+            }
+        }
+
+        // ── Render grid ───────────────────────────────────────
         function renderGrid() {
             grid.innerHTML = "";
             results.forEach(item => {
@@ -255,21 +373,95 @@
             });
         }
 
+        // ── Search flow ───────────────────────────────────────
+        btnSearch.addEventListener("click", async () => {
+            const keyword = document.getElementById("keyword").value.trim();
+            if (!keyword) {
+                alert("Please enter a product to search for.");
+                return;
+            }
+
+            btnSearch.disabled = true;
+            showPhase("progress");
+            progressText.textContent = `Searching Pinterest for "${keyword}"...`;
+
+            try {
+                const res = await fetch("/api/search", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        keyword: keyword,
+                        category: document.getElementById("category").value.trim() || "",
+                        max_pins: parseInt(document.getElementById("maxPins").value) || 40,
+                        max_scrolls: parseInt(document.getElementById("maxScrolls").value) || 8,
+                        session_timeout_s: parseInt(document.getElementById("timeout").value) || 180,
+                    }),
+                });
+
+                if (!res.ok) {
+                    const err = await res.json();
+                    alert(err.error || "Search failed");
+                    showPhase("search");
+                    btnSearch.disabled = false;
+                    return;
+                }
+
+                // Start polling for status
+                pollTimer = setInterval(pollSearchStatus, 2000);
+
+            } catch (e) {
+                alert("Network error: " + e.message);
+                showPhase("search");
+                btnSearch.disabled = false;
+            }
+        });
+
+        async function pollSearchStatus() {
+            try {
+                const res = await fetch("/api/search/status");
+                const data = await res.json();
+
+                progressText.textContent = data.progress || "Working...";
+
+                if (data.status === "done") {
+                    clearInterval(pollTimer);
+                    pollTimer = null;
+                    await loadResults();
+                } else if (data.status === "error") {
+                    clearInterval(pollTimer);
+                    pollTimer = null;
+                    alert("Search failed: " + (data.error || "Unknown error"));
+                    showPhase("search");
+                    btnSearch.disabled = false;
+                }
+            } catch (e) {
+                // Network hiccup — keep polling
+            }
+        }
+
+        // ── Load results ──────────────────────────────────────
         async function loadResults() {
             try {
                 const res = await fetch("/api/results");
                 results = await res.json();
+                selected.clear();
+
                 if (results.length === 0) {
-                    status.textContent = "No results yet. Run Phase 1 scoring first.";
+                    status.textContent = "No pins found. Try a different search.";
+                    showPhase("search");
+                    btnSearch.disabled = false;
                 } else {
-                    status.textContent = `${results.length} pins scored`;
+                    showPhase("results");
+                    status.textContent = `${results.length} pins scored — select images to generate posters`;
                     renderGrid();
+                    updateGenerateBtn();
                 }
             } catch (e) {
                 status.textContent = "Error loading results: " + e.message;
             }
         }
 
+        // ── Select All Approved ───────────────────────────────
         btnSelectAll.addEventListener("click", () => {
             const approved = results.filter(r => r.approve);
             if (selected.size === approved.length) {
@@ -281,10 +473,18 @@
             updateGenerateBtn();
         });
 
+        // ── New Search ────────────────────────────────────────
+        btnNewSearch.addEventListener("click", () => {
+            results = [];
+            selected.clear();
+            showPhase("search");
+            btnSearch.disabled = false;
+        });
+
+        // ── Generate Posters ──────────────────────────────────
         btnGenerate.addEventListener("click", async () => {
             if (selected.size === 0) return;
             btnGenerate.disabled = true;
-            spinner.classList.add("active");
             status.textContent = "Generating posters...";
 
             try {
@@ -306,12 +506,12 @@
             } catch (e) {
                 status.textContent = "Error: " + e.message;
             } finally {
-                spinner.classList.remove("active");
                 updateGenerateBtn();
             }
         });
 
-        loadResults();
+        // ── Initial state ─────────────────────────────────────
+        showPhase("search");
     </script>
 </body>
 </html>
