@@ -164,11 +164,21 @@ async def generate_one(req: GenerateOneRequest):
         full_res = await fetch_full_res_url(item["pin_url"])
         item["full_res_url"] = full_res
 
+        # Use full-res URL for generation; fall back to thumbnail if download fails
+        image_url = full_res
         poster_filename = f"poster_{item['id']}.png"
-        poster_path = await generate_poster(
-            image_url=full_res,
-            output_filename=poster_filename,
-        )
+        try:
+            poster_path = await generate_poster(
+                image_url=image_url,
+                output_filename=poster_filename,
+            )
+        except Exception:
+            print(f"[generate_one] Full-res failed, falling back to thumbnail for pin {item['id']}")
+            image_url = item["thumbnail_url"]
+            poster_path = await generate_poster(
+                image_url=image_url,
+                output_filename=poster_filename,
+            )
         item["poster_path"] = poster_path
 
         # Persist updated result
