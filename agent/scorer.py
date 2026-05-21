@@ -116,12 +116,33 @@ async def run_scoring_phase(
     )
 
     total_to_score = min(len(collected_pins), max_pins)
-    _report(f"Extracted {len(collected_pins)} pins — scoring {total_to_score} with AI...")
 
+    # Save partial results immediately so frontend can show images
     results: list[dict] = []
+    for i, pin in enumerate(collected_pins[:total_to_score]):
+        results.append(
+            {
+                "id": i + 1,
+                "thumbnail_url": pin["thumbnail_url"],
+                "pin_url": pin["pin_url"],
+                "full_res_url": None,
+                "score": None,
+                "reason": "",
+                "approve": False,
+                "selected": False,
+                "poster_path": None,
+            }
+        )
 
+    os.makedirs("data", exist_ok=True)
+    with open("data/scored_results.json", "w") as f:
+        json.dump(results, f, indent=2)
+
+    _report(f"images_extracted:{total_to_score}")
+
+    # Score each pin and update file progressively
     async with httpx.AsyncClient() as http:
-        for i, pin in enumerate(collected_pins):
+        for i, pin in enumerate(collected_pins[:total_to_score]):
             if guard.should_stop:
                 _report(f"Stopped: {guard.stop_reason}")
                 break
@@ -133,19 +154,12 @@ async def run_scoring_phase(
                 img_bytes = img_resp.content
                 score_result = await score_thumbnail(img_bytes, category)
 
-                results.append(
-                    {
-                        "id": i + 1,
-                        "thumbnail_url": pin["thumbnail_url"],
-                        "pin_url": pin["pin_url"],
-                        "full_res_url": None,
-                        "score": score_result["score"],
-                        "reason": score_result["reason"],
-                        "approve": score_result["approve"],
-                        "selected": False,
-                        "poster_path": None,
-                    }
-                )
+                results[i]["score"] = score_result["score"]
+                results[i]["reason"] = score_result["reason"]
+                results[i]["approve"] = score_result["approve"]
+
+                with open("data/scored_results.json", "w") as f:
+                    json.dump(results, f, indent=2)
 
                 guard.record_pin_collected()
                 _report(
@@ -162,11 +176,8 @@ async def run_scoring_phase(
                 )
                 continue
 
-    _report(f"Done — scored {len(results)} pins")
-
-    os.makedirs("data", exist_ok=True)
-    with open("data/scored_results.json", "w") as f:
-        json.dump(results, f, indent=2)
+    scored_count = len([r for r in results if r["score"] is not None])
+    _report(f"Done — scored {scored_count} pins")
 
     print(f"   Saved {len(results)} results to data/scored_results.json")
     return results

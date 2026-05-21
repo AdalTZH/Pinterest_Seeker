@@ -35,7 +35,7 @@ async def generate_poster(
         tagline=tagline,
     )
 
-    async with httpx.AsyncClient(timeout=120) as http:
+    async with httpx.AsyncClient(timeout=180) as http:
         # Download the image ourselves — Pinterest blocks direct fetches
         # from third-party servers (returns 403).
         img_resp = await http.get(image_url)

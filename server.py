@@ -39,6 +39,7 @@ _search_state: dict = {
     "category": "",
     "progress": "",
     "error": None,
+    "images_ready": False,
 }
 
 
@@ -71,9 +72,12 @@ async def _run_search(req: SearchRequest) -> None:
     _search_state["category"] = req.category or req.keyword
     _search_state["progress"] = "Starting Pinterest search..."
     _search_state["error"] = None
+    _search_state["images_ready"] = False
 
     def _update_progress(msg: str) -> None:
         _search_state["progress"] = msg
+        if msg.startswith("images_extracted:"):
+            _search_state["images_ready"] = True
 
     try:
         results = await run_scoring_phase(
@@ -126,6 +130,7 @@ async def search_status():
         "keyword": _search_state["keyword"],
         "progress": _search_state["progress"],
         "error": _search_state["error"],
+        "images_ready": _search_state["images_ready"],
     }
 
 
@@ -179,6 +184,8 @@ async def generate(req: GenerateRequest):
                 }
             )
         except Exception as e:
+            import traceback
+            traceback.print_exc()
             generated.append(
                 {"id": item["id"], "error": str(e)}
             )
