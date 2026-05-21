@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pinterest Poster Agent — Review</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 1.8rem;
+        }
+        .subtitle {
+            text-align: center;
+            color: #888;
+            margin-bottom: 24px;
+        }
+
+        /* Config panel */
+        .config-panel {
+            max-width: 700px;
+            margin: 0 auto 24px;
+            background: #fff;
+            border-radius: 12px;
+            padding: 20px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .config-panel label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #555;
+        }
+        .config-panel input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 0.95rem;
+        }
+
+        /* Actions bar */
+        .actions {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+        .actions button {
+            padding: 12px 32px;
+            font-size: 1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            margin: 0 8px;
+            transition: transform 0.1s;
+        }
+        .actions button:active { transform: scale(0.97); }
+        #btnGenerate {
+            background: #e60023;
+            color: #fff;
+        }
+        #btnGenerate:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        #btnSelectAll {
+            background: #eee;
+            color: #333;
+        }
+
+        /* Grid */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 16px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .card {
+            background: #fff;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            cursor: pointer;
+            position: relative;
+            transition: box-shadow 0.2s, transform 0.15s;
+        }
+        .card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.15); transform: translateY(-2px); }
+        .card.selected { outline: 3px solid #e60023; }
+        .card img {
+            width: 100%;
+            display: block;
+            object-fit: cover;
+            height: 260px;
+        }
+        .card-body { padding: 10px 12px; }
+        .badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 0.8rem;
+            color: #fff;
+        }
+        .badge.high { background: #0a8754; }
+        .badge.mid  { background: #f5a623; }
+        .badge.low  { background: #d93025; }
+        .reason {
+            font-size: 0.8rem;
+            color: #666;
+            margin-top: 6px;
+            line-height: 1.3;
+        }
+        .poster-link {
+            display: inline-block;
+            margin-top: 6px;
+            font-size: 0.8rem;
+            color: #e60023;
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        /* Checkmark overlay */
+        .card.selected::after {
+            content: "✓";
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #e60023;
+            color: #fff;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            font-weight: 700;
+        }
+
+        /* Status bar */
+        .status {
+            text-align: center;
+            margin-top: 24px;
+            color: #888;
+            font-size: 0.9rem;
+        }
+
+        /* Loading spinner */
+        .spinner {
+            display: none;
+            text-align: center;
+            margin: 24px 0;
+        }
+        .spinner.active { display: block; }
+        .spinner::after {
+            content: "";
+            display: inline-block;
+            width: 32px;
+            height: 32px;
+            border: 3px solid #ddd;
+            border-top-color: #e60023;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <h1>Pinterest Poster Agent</h1>
+    <p class="subtitle">Select images to generate e-commerce posters</p>
+
+    <div class="config-panel">
+        <div>
+            <label>Product Name</label>
+            <input type="text" id="productName" placeholder="e.g. Silk Evening Dress">
+        </div>
+        <div>
+            <label>Price</label>
+            <input type="text" id="price" placeholder="e.g. $129.99">
+        </div>
+        <div>
+            <label>Logo URL (optional)</label>
+            <input type="text" id="logoUrl" placeholder="https://...">
+        </div>
+        <div>
+            <label>Tagline</label>
+            <input type="text" id="tagline" placeholder="e.g. Elegance Redefined">
+        </div>
+    </div>
+
+    <div class="actions">
+        <button id="btnSelectAll">Select All Approved</button>
+        <button id="btnGenerate" disabled>Generate Posters (0)</button>
+    </div>
+
+    <div class="spinner" id="spinner"></div>
+    <div class="grid" id="grid"></div>
+    <p class="status" id="status">Loading results...</p>
+
+    <script>
+        const grid = document.getElementById("grid");
+        const status = document.getElementById("status");
+        const spinner = document.getElementById("spinner");
+        const btnGenerate = document.getElementById("btnGenerate");
+        const btnSelectAll = document.getElementById("btnSelectAll");
+
+        let results = [];
+        let selected = new Set();
+
+        function badgeClass(score) {
+            if (score >= 7) return "high";
+            if (score >= 4) return "mid";
+            return "low";
+        }
+
+        function updateGenerateBtn() {
+            const n = selected.size;
+            btnGenerate.textContent = `Generate Posters (${n})`;
+            btnGenerate.disabled = n === 0;
+        }
+
+        function renderGrid() {
+            grid.innerHTML = "";
+            results.forEach(item => {
+                const card = document.createElement("div");
+                card.className = "card" + (selected.has(item.id) ? " selected" : "");
+                card.innerHTML = `
+                    <img src="${item.thumbnail_url}" alt="Pin ${item.id}" loading="lazy">
+                    <div class="card-body">
+                        <span class="badge ${badgeClass(item.score)}">${item.score}/10</span>
+                        <p class="reason">${item.reason}</p>
+                        ${item.poster_path ? `<a class="poster-link" href="/${item.poster_path}" target="_blank">View Poster</a>` : ""}
+                    </div>
+                `;
+                card.addEventListener("click", () => {
+                    if (selected.has(item.id)) {
+                        selected.delete(item.id);
+                    } else {
+                        selected.add(item.id);
+                    }
+                    renderGrid();
+                    updateGenerateBtn();
+                });
+                grid.appendChild(card);
+            });
+        }
+
+        async function loadResults() {
+            try {
+                const res = await fetch("/api/results");
+                results = await res.json();
+                if (results.length === 0) {
+                    status.textContent = "No results yet. Run Phase 1 scoring first.";
+                } else {
+                    status.textContent = `${results.length} pins scored`;
+                    renderGrid();
+                }
+            } catch (e) {
+                status.textContent = "Error loading results: " + e.message;
+            }
+        }
+
+        btnSelectAll.addEventListener("click", () => {
+            const approved = results.filter(r => r.approve);
+            if (selected.size === approved.length) {
+                selected.clear();
+            } else {
+                approved.forEach(r => selected.add(r.id));
+            }
+            renderGrid();
+            updateGenerateBtn();
+        });
+
+        btnGenerate.addEventListener("click", async () => {
+            if (selected.size === 0) return;
+            btnGenerate.disabled = true;
+            spinner.classList.add("active");
+            status.textContent = "Generating posters...";
+
+            try {
+                const res = await fetch("/api/generate", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        selected_ids: [...selected],
+                        product_name: document.getElementById("productName").value || "Product",
+                        price: document.getElementById("price").value || "",
+                        tagline: document.getElementById("tagline").value || "",
+                        logo_url: document.getElementById("logoUrl").value || "",
+                    }),
+                });
+                const data = await res.json();
+                status.textContent = `Generated ${data.generated?.length || 0} poster(s)`;
+                selected.clear();
+                await loadResults();
+            } catch (e) {
+                status.textContent = "Error: " + e.message;
+            } finally {
+                spinner.classList.remove("active");
+                updateGenerateBtn();
+            }
+        });
+
+        loadResults();
+    </script>
+</body>
+</html>

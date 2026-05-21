@@ -1,0 +1,8 @@
+browser-use
+playwright
+openai
+fastapi
+uvicorn
+httpx
+python-dotenv
+aiosqlite
