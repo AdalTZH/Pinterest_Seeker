@@ -162,7 +162,7 @@ async def generate(req: GenerateRequest):
             full_res = await fetch_full_res_url(item["pin_url"])
             item["full_res_url"] = full_res
 
-            poster_filename = f"poster_{item['id']}.txt"
+            poster_filename = f"poster_{item['id']}.png"
             poster_path = await generate_poster(
                 image_url=full_res,
                 product_name=req.product_name,

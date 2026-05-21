@@ -1,13 +1,13 @@
 # Pinterest AI Agent — E-Commerce Poster Generator
 
-A fully autonomous AI agent + human-in-the-loop review system that browses Pinterest, scores product images using **gpt-5.4-mini**, and generates e-commerce posters via **nanoBanana Pro**.
+A fully autonomous AI agent + human-in-the-loop review system that browses Pinterest, scores product images using **gpt-5.4-mini**, and generates e-commerce posters via **Nano Banana 2** (Gemini 3.1 Flash Image Preview).
 
 ## How It Works
 
 1. **Search**: User opens the web UI and types what product they're looking for (e.g. "evening dresses", "silk skirts").
 2. **Agent Browsing**: The AI agent uses [Scrapling](https://github.com/CYBERAD7/scrapling) (with anti-bot bypass) to browse Pinterest — extracts pin thumbnail URLs, downloads them, and scores with gpt-5.4-mini. Progress is shown in real-time.
 3. **Review**: Once scoring is done, a grid of scored images appears. User reviews the AI scores and reasons, selects the images they like.
-4. **Poster Generation**: User fills in product details (name, price, tagline) and clicks "Generate". The agent extracts full-res images and generates posters via nanoBanana Pro.
+4. **Poster Generation**: User fills in product details (name, price, tagline) and clicks "Generate". The agent extracts full-res images and generates posters via Nano Banana 2.
 
 ## Architecture
 
@@ -34,7 +34,7 @@ A fully autonomous AI agent + human-in-the-loop review system that browses Pinte
         ↓
 ┌──────────────────────────────────────────────┐
 │  PHASE 3 — Full-Res + Poster Gen             │
-│  Extract full-res URL → nanoBanana Pro       │
+│  Extract full-res URL → Nano Banana 2         │
 │  Poster saved to /output/posters/            │
 └──────────────────────────────────────────────┘
 ```
@@ -88,7 +88,7 @@ pinterest-poster-agent/
 │   ├── guardrails.py        # BrowsingGuardrail class
 │   └── prompts.py           # System prompts
 ├── poster/
-│   └── nano_banana.py       # nanoBanana Pro integration
+│   └── nano_banana.py       # Nano Banana 2 integration
 ├── db/
 │   └── tracker.py           # SQLite dedup tracker
 ├── static/
@@ -103,4 +103,4 @@ pinterest-poster-agent/
 |---|---|
 | `OPENROUTER_API_KEY` | OpenRouter API key |
 | `AGENT_MODEL` | Vision model (default: `openai/gpt-5.4-mini`) |
-| `NANO_BANANA_MODEL` | Poster model (default: `nanobanana/nanobanana-pro`) |
+| `NANO_BANANA_MODEL` | Poster model (default: `google/gemini-3.1-flash-image-preview`) |
